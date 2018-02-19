@@ -38,6 +38,11 @@ public class Configuration extends SQLiteManager
 		return downloaded[0];
 	}
 	
+	public void removeUseless()
+	{
+		sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-7 days');");
+	}
+	
 	public void setDownloaded(Path path) throws InterruptedException
 	{
 		sendPreparedUpdateRequest("INSERT INTO Downloaded(Filee,DateDownload) VALUES(?,?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString()), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString()))).waitSafely();

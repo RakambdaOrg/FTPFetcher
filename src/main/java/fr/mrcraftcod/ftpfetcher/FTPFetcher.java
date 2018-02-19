@@ -1,8 +1,8 @@
 package fr.mrcraftcod.ftpfetcher;
 
+import com.jcraft.jsch.*;
 import fr.mrcraftcod.utils.base.FileUtils;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
+import fr.mrcraftcod.utils.base.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,7 +14,11 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com) on 09/12/2017.
@@ -29,78 +33,91 @@ public class FTPFetcher
 	
 	public void run(Configuration config, String folder, Path outputFolder) throws InterruptedException
 	{
-		FTPClient client = new FTPClient();
+		JSch.setConfig("StrictHostKeyChecking", "no");
+		
+		Session session = null;
+		ChannelSftp sftpChannel = null;
+		
 		try
 		{
-			client.connect(Settings.getString("ftpHost"));
-			client.enterLocalPassiveMode();
-			client.login(Settings.getString("ftpUser"), Settings.getString("ftpPass"));
-			fetchFolder(config, client, folder, outputFolder);
+			JSch jsch = new JSch();
+			String knownHostsFilename = "/home/mrcraftcod/.ssh/known_hosts";
+			jsch.setKnownHosts(knownHostsFilename);
+			
+			session = jsch.getSession(Settings.getString("ftpUser"), Settings.getString("ftpHost"));
+			session.setPassword(Settings.getString("ftpPass"));
+			
+			session.connect();
+			
+			Channel channel = session.openChannel("sftp");
+			channel.connect();
+			
+			session.setServerAliveInterval(20000);
+			sftpChannel = (ChannelSftp) channel;
+			System.out.printf("Downloaded %d files\n", fetchFolder(config, sftpChannel, folder, outputFolder));
 		}
-		catch(IOException e)
+		catch(JSchException | SftpException e)
 		{
-			e.printStackTrace();
+			Log.warning("Error downloading folder: " + e.getMessage());
 		}
 		finally
 		{
-			try
-			{
-				client.disconnect();
-			}
-			catch(IOException e)
-			{
-				e.printStackTrace();
-			}
+			if(sftpChannel != null && sftpChannel.isConnected())
+				sftpChannel.exit();
+			if(session != null && session.isConnected())
+				session.disconnect();
 		}
 	}
 	
-	private void fetchFolder(Configuration config, FTPClient client, String folder, Path outPath) throws IOException, InterruptedException
+	private int fetchFolder(Configuration config, ChannelSftp client, String folder, Path outPath) throws InterruptedException, SftpException
 	{
-		FTPFile[] files = client.listFiles(folder);
-		System.out.format("Fetching folder %s (%d)\n", folder, files.length);
-		for(FTPFile file : files)
+		int downloaded = 0;
+		List<ChannelSftp.LsEntry> files = Arrays.stream(client.ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry)o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).collect(Collectors.toList());
+		System.out.format("Fetching folder %s (%d)\n", folder, files.size());
+		for(ChannelSftp.LsEntry file : files)
 		{
-			if(file.isFile())
+			if(file.getAttrs().isDir())
 			{
-				if(!config.isDownloaded(Paths.get(folder).resolve(file.getName())))
-					downloadFile(config, client, folder, file, outPath.toFile());
-				// else
-				// 	System.out.format("File %s/%s is already downloaded\n", folder, file.getName());
-			}
-			else if(file.isDirectory())
-			{
-				if(file.getName().equals(".") || file.getName().equals(".."))
+				if(file.getFilename().equals(".") || file.getFilename().equals(".."))
 					continue;
-				fetchFolder(config, client, folder + file.getName() + "/", outPath.resolve(file.getName()));
+				downloaded += fetchFolder(config, client, folder + file.getFilename() + "/", outPath.resolve(file.getFilename()));
+			}
+			else
+			{
+				file.getFilename();
+				if(!config.isDownloaded(Paths.get(folder).resolve(file.getFilename())))
+					downloaded += downloadFile(config, client, folder, file, outPath.toFile()) ? 1 : 0;
 			}
 		}
+		return downloaded;
 	}
 	
-	private void downloadFile(Configuration config, FTPClient client, String folder, FTPFile file, File folderOut)
+	private boolean downloadFile(Configuration config, ChannelSftp client, String folder, ChannelSftp.LsEntry file, File folderOut)
 	{
 		String date;
 		try
 		{
-			date = dateFormatter.format(new Date(Long.parseLong(file.getName().substring(0, file.getName().indexOf("."))) * 1000));
+			date = dateFormatter.format(new Date(Long.parseLong(file.getFilename().substring(0, file.getFilename().indexOf("."))) * 1000));
 		}
 		catch(NumberFormatException e)
 		{
-			date = OffsetDateTime.parse(file.getName().substring(0, file.getName().indexOf("."))).format(dateTimeFormatter);
+			date = OffsetDateTime.parse(file.getFilename().substring(0, file.getFilename().indexOf("."))).format(dateTimeFormatter);
 		}
-		File fileOut = new File(folderOut, date + ".png");
+		File fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
 		FileUtils.createDirectories(fileOut);
-		System.out.format("Downloading file %s%s\n", folder, file.getName());
+		System.out.format("Downloading file %s%s\n", folder, file.getFilename());
 		try(FileOutputStream fos = new FileOutputStream(fileOut))
 		{
-			if(client.retrieveFile(folder + file.getName(), fos))
-			{
-				Files.setAttribute(Paths.get(fileOut.toURI()), "creationTime", FileTime.fromMillis(file.getTimestamp().getTimeInMillis()));
-				config.setDownloaded(Paths.get(folder).resolve(file.getName()));
-			}
+			client.get(folder + file.getFilename(), fos, new ProgressMonitor());
+			Files.setAttribute(Paths.get(fileOut.toURI()), "creationTime", FileTime.fromMillis(file.getAttrs().getATime() * 1000));
+			config.setDownloaded(Paths.get(folder).resolve(file.getFilename()));
 		}
-		catch(IOException | InterruptedException e)
+		catch(IOException | InterruptedException | SftpException e)
 		{
-			e.printStackTrace();
+			System.out.println("ERR");
+			Log.warning("Error downloading file: " + e.getMessage());
+			return false;
 		}
+		return fileOut.length() == file.getAttrs().getSize();
 	}
 }

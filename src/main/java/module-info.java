@@ -6,10 +6,9 @@
  */
 module fr.mrcraftcod.FTPFetcher {
 	requires fr.mrcraftcod.utils.base;
-	requires commons.net;
 	requires fr.mrcraftcod.utils.config;
 	requires fr.mrcraftcod.utils.http;
 	requires json;
 	requires fr.mrcraftcod.utils.resources;
-	
+	requires jsch;
 }
