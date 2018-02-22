@@ -105,7 +105,7 @@ public class FTPFetcher
 		}
 		File fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
 		FileUtils.createDirectories(fileOut);
-		System.out.format("Downloading file %s%s\n", folder, file.getFilename());
+		System.out.format("|-Downloading file %s%s\n", folder, file.getFilename());
 		try(FileOutputStream fos = new FileOutputStream(fileOut))
 		{
 			client.get(folder + file.getFilename(), fos, new ProgressMonitor());
