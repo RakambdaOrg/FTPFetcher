@@ -6,14 +6,13 @@
 
     <groupId>mrcraftcod</groupId>
     <artifactId>FTPFetcher</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>9</maven.compiler.source>
-        <maven.compiler.target>9</maven.compiler.target>
-        <maven.compiler.release>9</maven.compiler.release>
-        <copy.dir>${user.home}/Dropbox/Documents/JARs</copy.dir>
+        <java.version>9</java.version>
+        <copy.build.path>${user.home}/Dropbox/Documents/JARs/</copy.build.path>
+        <main.class>fr.mrcraftcod.ftpfetcher.Main</main.class>
     </properties>
     <packaging>jar</packaging>
 
@@ -22,7 +21,6 @@
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-ftp</artifactId>
-                <version>LATEST</version>
             </extension>
         </extensions>
         <plugins>
@@ -42,7 +40,7 @@
                             <finalName>${project.artifactId}</finalName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>fr.mrcraftcod.ftpfetcher.Main</mainClass>
+                                    <mainClass>${main.class}</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -67,9 +65,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <release>${maven.compiler.release}</release>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
                 </configuration>
@@ -86,7 +84,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${basedir}/target/${project.artifactId}.jar" tofile="${copy.dir}/${project.artifactId}.jar"/>
+                                <copy file="${basedir}/target/${project.artifactId}.jar" tofile="${copy.build.path}/${project.artifactId}.jar"/>
                             </target>
                         </configuration>
                     </execution>
@@ -94,6 +92,7 @@
             </plugin>
         </plugins>
     </build>
+
     <distributionManagement>
         <site>
             <id>mrcraftcod.write</id>

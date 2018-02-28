@@ -72,8 +72,9 @@ public class FTPFetcher
 	private int fetchFolder(Configuration config, ChannelSftp client, String folder, Path outPath) throws InterruptedException, SftpException
 	{
 		int downloaded = 0;
+		System.out.format("Fetching folder %s\n", folder);
 		List<ChannelSftp.LsEntry> files = Arrays.stream(client.ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry)o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).collect(Collectors.toList());
-		System.out.format("Fetching folder %s (%d)\n", folder, files.size());
+		System.out.format("Downloading folder %s (%d)\n", folder, files.size());
 		for(ChannelSftp.LsEntry file : files)
 		{
 			if(file.getAttrs().isDir())
