@@ -73,9 +73,25 @@ public class FTPFetcher
 	{
 		int downloaded = 0;
 		System.out.format("Fetching folder %s\n", folder);
-		List<ChannelSftp.LsEntry> files = Arrays.stream(client.ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry)o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).collect(Collectors.toList());
-		System.out.format("Downloading folder %s (%d)\n", folder, files.size());
-		for(ChannelSftp.LsEntry file : files)
+		List<ChannelSftp.LsEntry> files = Arrays.stream(client.ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).collect(Collectors.toList());
+		List<ChannelSftp.LsEntry> newFiles = files.stream().filter(f -> {
+			try
+			{
+				if(f.getFilename().equals(".") || f.getFilename().equals(".."))
+					return false;
+				if(f.getAttrs().isDir())
+					return true;
+				if(!config.isDownloaded(Paths.get(folder).resolve(f.getFilename())))
+					return true;
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+			return false;
+		}).collect(Collectors.toList());
+		System.out.format("Downloading folder %s (New+Folders: %d, Total: %d)\n", folder, newFiles.size(), files.size());
+		for(ChannelSftp.LsEntry file : newFiles)
 		{
 			if(file.getAttrs().isDir())
 			{
@@ -85,9 +101,7 @@ public class FTPFetcher
 			}
 			else
 			{
-				file.getFilename();
-				if(!config.isDownloaded(Paths.get(folder).resolve(file.getFilename())))
-					downloaded += downloadFile(config, client, folder, file, outPath.toFile()) ? 1 : 0;
+				downloaded += downloadFile(config, client, folder, file, outPath.toFile()) ? 1 : 0;
 			}
 		}
 		return downloaded;
