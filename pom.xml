@@ -6,7 +6,7 @@
 
     <groupId>mrcraftcod</groupId>
     <artifactId>FTPFetcher</artifactId>
-    <version>1.1</version>
+    <version>1.4</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -122,18 +122,13 @@
         </dependency>
         <dependency>
             <groupId>mrcraftcod</groupId>
-            <artifactId>utils.http</artifactId>
-            <version>2.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>mrcraftcod</groupId>
             <artifactId>utils.resources</artifactId>
             <version>2.0.1</version>
         </dependency>
         <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20170516</version>
+            <groupId>mrcraftcod</groupId>
+            <artifactId>utils.javafx</artifactId>
+            <version>2.0.2</version>
         </dependency>
     </dependencies>
 </project>

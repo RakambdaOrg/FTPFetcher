@@ -40,7 +40,7 @@ public class Configuration extends SQLiteManager
 	
 	public void removeUseless()
 	{
-		sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-7 days');");
+		sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-8 days');");
 	}
 	
 	public void setDownloaded(Path path) throws InterruptedException

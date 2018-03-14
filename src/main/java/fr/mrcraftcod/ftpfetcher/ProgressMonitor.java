@@ -11,7 +11,7 @@ public class ProgressMonitor implements SftpProgressMonitor
     
     public ProgressMonitor() {}
 
-    public void init(int op, java.lang.String src, java.lang.String dest, long max) 
+    public void init(int op, java.lang.String src, java.lang.String dest, long max)
     {
         this.max = max;
          System.out.format("Starting\r");
@@ -23,7 +23,7 @@ public class ProgressMonitor implements SftpProgressMonitor
         for(int i =0; i <= percent * max; i++)
             s += c;
         return s;
-    } 
+    }
 
     public boolean count(long bytes)
     {

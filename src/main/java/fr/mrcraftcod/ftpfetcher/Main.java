@@ -1,11 +1,8 @@
 package fr.mrcraftcod.ftpfetcher;
 
-import com.mashape.unirest.http.exceptions.UnirestException;
+import javafx.application.Application;
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.nio.file.Paths;
-
 
 /**
  * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com) on 09/12/2017.
@@ -15,12 +12,17 @@ import java.nio.file.Paths;
  */
 public class Main
 {
-	public static void main(String[] args) throws InterruptedException, ClassNotFoundException, MalformedURLException, URISyntaxException, UnirestException
+	public static void main(String[] args) throws InterruptedException, ClassNotFoundException
 	{
-		Configuration config = new Configuration();
-		config.removeUseless();
-		if(args.length == 0 || args[0].equals("--ftp"))
+		if(args.length > 0 && args[0].equals("--ui"))
 		{
+			Application.launch(MainApplication.class, args);
+		}
+		else
+		{
+			Configuration config = new Configuration();
+			config.removeUseless();
+			
 			try
 			{
 				new FTPFetcher().run(config, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder")));
@@ -28,10 +30,6 @@ public class Main
 			catch(Exception e)
 			{
 			}
-		}
-		else
-		{
-			new APIFetcher().run(config, Settings.getString("apiValue"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder")));
 		}
 	}
 }

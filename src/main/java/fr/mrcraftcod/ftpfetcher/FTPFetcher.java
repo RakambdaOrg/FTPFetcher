@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -71,6 +72,7 @@ public class FTPFetcher
 	
 	private int fetchFolder(Configuration config, ChannelSftp client, String folder, Path outPath) throws InterruptedException, SftpException
 	{
+		AtomicInteger folders = new AtomicInteger();
 		int downloaded = 0;
 		System.out.format("Fetching folder %s\n", folder);
 		List<ChannelSftp.LsEntry> files = Arrays.stream(client.ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).collect(Collectors.toList());
@@ -80,7 +82,10 @@ public class FTPFetcher
 				if(f.getFilename().equals(".") || f.getFilename().equals(".."))
 					return false;
 				if(f.getAttrs().isDir())
+				{
+					folders.getAndIncrement();
 					return true;
+				}
 				if(!config.isDownloaded(Paths.get(folder).resolve(f.getFilename())))
 					return true;
 			}
@@ -90,7 +95,7 @@ public class FTPFetcher
 			}
 			return false;
 		}).collect(Collectors.toList());
-		System.out.format("Downloading folder %s (New+Folders: %d, Total: %d)\n", folder, newFiles.size(), files.size());
+		System.out.format("Downloading folder %s (New: %d, Total: %d)\n", folder, newFiles.size() - folders.get(), files.size());
 		for(ChannelSftp.LsEntry file : newFiles)
 		{
 			if(file.getAttrs().isDir())
