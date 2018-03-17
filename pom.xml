@@ -93,10 +93,10 @@
     </build>
 
     <distributionManagement>
-        <site>
+        <repository>
             <id>mrcraftcod.write</id>
             <url>${mrcraftcod.write.url}</url>
-        </site>
+        </repository>
     </distributionManagement>
     <repositories>
         <repository>
