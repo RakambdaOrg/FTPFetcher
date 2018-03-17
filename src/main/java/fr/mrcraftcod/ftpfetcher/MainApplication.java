@@ -115,7 +115,10 @@ public class MainApplication extends ApplicationBase
 	@Override
 	public Consumer<Stage> getOnStageDisplayed() throws Exception
 	{
-		return null;
+		return evt -> {
+			if(getParameters().getNamed().containsKey("start"))
+				start.fire();
+		};
 	}
 	
 	@Override
