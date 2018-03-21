@@ -73,14 +73,14 @@ public class MainApplication extends ApplicationBase
 		config.removeUseless();
 		executor = Executors.newFixedThreadPool(THREAD_COUNT);
 		
-		JSch.setConfig("StrictHostKeyChecking", "no");
+		//JSch.setConfig("StrictHostKeyChecking", "no");
 		session = null;
 		sftpChannel = null;
 		
 		try
 		{
 			JSch jsch = new JSch();
-			jsch.setKnownHosts(FileUtils.getHomeFolder("/home/mrcraftcod/.ssh/known_hosts").getAbsolutePath());
+			jsch.setKnownHosts(FileUtils.getHomeFolder(".ssh/known_hosts").getAbsolutePath());
 			
 			session = jsch.getSession(Settings.getString("ftpUser"), Settings.getString("ftpHost"));
 			session.setPassword(Settings.getString("ftpPass"));
