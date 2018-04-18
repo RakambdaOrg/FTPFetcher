@@ -136,8 +136,9 @@ public class FTPFetcher
 		{
 			System.out.println("ERR");
 			Log.warning("Error downloading file: " + e.getMessage());
+			fileOut.deleteOnExit();
 			return false;
 		}
-		return fileOut.length() == file.getAttrs().getSize();
+		return fileOut.length() != 0 && fileOut.length() == file.getAttrs().getSize();
 	}
 }

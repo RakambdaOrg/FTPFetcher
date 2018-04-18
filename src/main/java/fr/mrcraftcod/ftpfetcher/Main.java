@@ -25,7 +25,8 @@ public class Main
 			
 			try
 			{
-				new FTPFetcher().run(config, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder")));
+				new FTPFetcher().run(config, Settings.getString("ftpFolder1"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder1")));
+				new FTPFetcher().run(config, Settings.getString("ftpFolder2"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder2")));
 			}
 			catch(Exception e)
 			{
