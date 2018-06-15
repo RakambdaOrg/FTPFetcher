@@ -1,6 +1,5 @@
 package fr.mrcraftcod.ftpfetcher;
 
-import javafx.application.Application;
 import java.io.File;
 import java.nio.file.Paths;
 
@@ -14,23 +13,16 @@ public class Main
 {
 	public static void main(String[] args) throws InterruptedException, ClassNotFoundException
 	{
-		if(args.length > 0 && args[0].equals("--ui"))
+		Configuration config = new Configuration();
+		config.removeUseless();
+		
+		try
 		{
-			Application.launch(MainApplication.class, args);
+			new FTPFetcher().run(config, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder")));
+			new FTPFetcher().run(config, Settings.getString("ftpFolder2"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder2")));
 		}
-		else
+		catch(Exception e)
 		{
-			Configuration config = new Configuration();
-			config.removeUseless();
-			
-			try
-			{
-				new FTPFetcher().run(config, Settings.getString("ftpFolder1"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder1")));
-				new FTPFetcher().run(config, Settings.getString("ftpFolder2"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder2")));
-			}
-			catch(Exception e)
-			{
-			}
 		}
 	}
 }

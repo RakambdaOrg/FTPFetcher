@@ -8,8 +8,5 @@ module fr.mrcraftcod.FTPFetcher {
 	requires fr.mrcraftcod.utils.base;
 	requires fr.mrcraftcod.utils.config;
 	requires fr.mrcraftcod.utils.resources;
-	requires fr.mrcraftcod.utils.javafx;
 	requires jsch;
-	
-	exports fr.mrcraftcod.ftpfetcher to javafx.graphics;
 }

@@ -61,6 +61,10 @@ public class FTPFetcher
 		{
 			Log.warning("Error downloading folder: " + e.getMessage());
 		}
+		catch(IOException e)
+		{
+			Log.error("Error opening settings", e);
+		}
 		finally
 		{
 			if(sftpChannel != null && sftpChannel.isConnected())
