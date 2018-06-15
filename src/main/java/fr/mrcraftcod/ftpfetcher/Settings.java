@@ -1,6 +1,8 @@
 package fr.mrcraftcod.ftpfetcher;
 
 import fr.mrcraftcod.utils.resources.ResourcesBase;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -16,10 +18,11 @@ public class Settings
 	private final Properties properties;
 	private static Settings INSTANCE = null;
 	
-	private Settings()
+	private Settings() throws IOException
 	{
 		this.properties = new Properties();
-		try(InputStream is = new ResourcesBase(Main.class).getResource(() -> "", "settings.properties").openStream())
+		InputStream is = new File(".", "FTPFetcher.properties").exists() ? new FileInputStream(new File(".", "FTPFetcher.properties")) : new ResourcesBase(Main.class).getResource(() -> "", "FTPFetcher.properties").openStream();
+		try(is)
 		{
 			this.properties.load(is);
 		}
@@ -29,12 +32,12 @@ public class Settings
 		}
 	}
 	
-	public static String getString(String key)
+	public static String getString(String key) throws IOException
 	{
 		return getInstance().properties.getProperty(key);
 	}
 	
-	private static Settings getInstance()
+	private static Settings getInstance() throws IOException
 	{
 		if(INSTANCE == null)
 			INSTANCE = new Settings();
