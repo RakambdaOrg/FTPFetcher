@@ -1,6 +1,7 @@
 package fr.mrcraftcod.ftpfetcher;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
@@ -11,8 +12,11 @@ import java.nio.file.Paths;
  */
 public class Main
 {
-	public static void main(String[] args) throws InterruptedException, ClassNotFoundException
+	public static void main(String[] args) throws InterruptedException, ClassNotFoundException, IOException
 	{
+		if(args.length > 0)
+			Settings.getInstance(args[0]);
+		
 		Configuration config = new Configuration();
 		config.removeUseless();
 		

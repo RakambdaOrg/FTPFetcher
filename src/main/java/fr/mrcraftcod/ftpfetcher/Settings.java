@@ -15,13 +15,14 @@ import java.util.Properties;
  */
 public class Settings
 {
+	public static final String DEFAULT_NAME = "FTPFetcher.properties";
 	private final Properties properties;
 	private static Settings INSTANCE = null;
 	
-	private Settings() throws IOException
+	private Settings(String name) throws IOException
 	{
 		this.properties = new Properties();
-		InputStream is = new File(".", "FTPFetcher.properties").exists() ? new FileInputStream(new File(".", "FTPFetcher.properties")) : new ResourcesBase(Main.class).getResource(() -> "", "FTPFetcher.properties").openStream();
+		InputStream is = new File(".", name).exists() ? new FileInputStream(new File(".", "FTPFetcher.properties")) : new ResourcesBase(Main.class).getResource(() -> "", "FTPFetcher.properties").openStream();
 		try(is)
 		{
 			this.properties.load(is);
@@ -37,10 +38,15 @@ public class Settings
 		return getInstance().properties.getProperty(key);
 	}
 	
-	private static Settings getInstance() throws IOException
+	public static Settings getInstance() throws IOException
+	{
+		return getInstance(DEFAULT_NAME);
+	}
+	
+	public static Settings getInstance(String name) throws IOException
 	{
 		if(INSTANCE == null)
-			INSTANCE = new Settings();
+			INSTANCE = new Settings(name);
 		return INSTANCE;
 	}
 }
