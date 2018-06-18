@@ -42,8 +42,8 @@ public class FTPFetcher
 		try
 		{
 			JSch jsch = new JSch();
-			String knownHostsFilename = "/home/mrcraftcod/.ssh/known_hosts";
-			jsch.setKnownHosts(knownHostsFilename);
+			File knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
+			jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
 			
 			session = jsch.getSession(Settings.getString("ftpUser"), Settings.getString("ftpHost"));
 			session.setPassword(Settings.getString("ftpPass"));
@@ -90,7 +90,7 @@ public class FTPFetcher
 					folders.getAndIncrement();
 					return true;
 				}
-				if(!config.isDownloaded(Paths.get(folder).resolve(f.getFilename())))
+				if(!config.isDownloaded(Paths.get(folder).resolve(f.getFilename().replace(":", "."))))
 					return true;
 			}
 			catch(InterruptedException e)
@@ -134,7 +134,7 @@ public class FTPFetcher
 		{
 			client.get(folder + file.getFilename(), fos, new ProgressMonitor());
 			Files.setAttribute(Paths.get(fileOut.toURI()), "creationTime", FileTime.fromMillis(file.getAttrs().getATime() * 1000));
-			config.setDownloaded(Paths.get(folder).resolve(file.getFilename()));
+			config.setDownloaded(Paths.get(folder).resolve(file.getFilename().replace(":", ".")));
 		}
 		catch(IOException | InterruptedException | SftpException e)
 		{
