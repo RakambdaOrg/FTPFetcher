@@ -1,6 +1,5 @@
 package fr.mrcraftcod.ftpfetcher;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
@@ -22,8 +21,8 @@ public class Main
 		
 		try
 		{
-			new FTPFetcher().run(config, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder")));
-			new FTPFetcher().run(config, Settings.getString("ftpFolder2"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder2")));
+			new FTPFetcher().run(config, Settings.getString("ftpFolder"), Paths.get(Settings.getString("localFolder")));
+			new FTPFetcher().run(config, Settings.getString("ftpFolder2"), Paths.get(Settings.getString("localFolder2")));
 		}
 		catch(Exception e)
 		{
