@@ -1,6 +1,5 @@
 package fr.mrcraftcod.ftpfetcher;
 
-import fr.mrcraftcod.utils.resources.ResourcesBase;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,7 +21,7 @@ public class Settings
 	private Settings(String name) throws IOException
 	{
 		this.properties = new Properties();
-		InputStream is = new File(".", name).exists() ? new FileInputStream(new File(".", "FTPFetcher.properties")) : new ResourcesBase(Main.class).getResource(() -> "", "FTPFetcher.properties").openStream();
+		InputStream is = new FileInputStream(new File(".", name));
 		try(is)
 		{
 			this.properties.load(is);
