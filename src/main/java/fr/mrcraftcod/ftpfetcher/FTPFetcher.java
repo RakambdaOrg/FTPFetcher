@@ -100,7 +100,7 @@ public class FTPFetcher
 			return false;
 		}).collect(Collectors.toList());
 		System.out.format("Downloading folder %s (New: %d, Total: %d)\n", folder, newFiles.size() - folders.get(), files.size());
-		for(ChannelSftp.LsEntry file : newFiles)
+		for(ChannelSftp.LsEntry file: newFiles)
 		{
 			if(file.getAttrs().isDir())
 			{
@@ -133,7 +133,9 @@ public class FTPFetcher
 		try(FileOutputStream fos = new FileOutputStream(fileOut))
 		{
 			client.get(folder + file.getFilename(), fos, new ProgressMonitor());
-			Files.setAttribute(Paths.get(fileOut.toURI()), "creationTime", FileTime.fromMillis(file.getAttrs().getATime() * 1000));
+			
+			setAttributes(Paths.get(fileOut.toURI()), FileTime.fromMillis(file.getAttrs().getATime() * 1000L));
+			
 			config.setDownloaded(Paths.get(folder).resolve(file.getFilename().replace(":", ".")));
 		}
 		catch(IOException | InterruptedException | SftpException e)
@@ -144,5 +146,18 @@ public class FTPFetcher
 			return false;
 		}
 		return fileOut.length() != 0 && fileOut.length() == file.getAttrs().getSize();
+	}
+	
+	private void setAttributes(Path path, FileTime fileTime)
+	{
+		for(String attribute: Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime"))
+			try
+			{
+				Files.setAttribute(path, attribute, fileTime);
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 	}
 }
