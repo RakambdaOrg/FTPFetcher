@@ -14,14 +14,14 @@ import java.util.Properties;
  */
 public class Settings
 {
-	public static final String DEFAULT_NAME = "FTPFetcher.properties";
+	public static final String DEFAULT_NAME = "./FTPFetcher.properties";
 	private final Properties properties;
 	private static Settings INSTANCE = null;
 	
 	private Settings(String name) throws IOException
 	{
 		this.properties = new Properties();
-		InputStream is = new FileInputStream(new File(".", name));
+		InputStream is = new FileInputStream(new File(name));
 		try(is)
 		{
 			this.properties.load(is);
