@@ -52,7 +52,7 @@ public class Main
 		Log.info(String.format("Found %d elements to download in %dms", downloadSet.size(), System.currentTimeMillis() - startFetch));
 		
 		long startDownload = System.currentTimeMillis();
-		ExecutorService executor = Executors.newFixedThreadPool(2);
+		ExecutorService executor = Executors.newFixedThreadPool(4);
 		final List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 		
 		try

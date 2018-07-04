@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class FTPFetcher implements Callable<List<DownloadResult>>
 {
 	
-	
 	private final Configuration config;
 	private final ConcurrentLinkedQueue<DownloadElement> downloadSet;
 	private final JSch jsch;
@@ -62,21 +61,22 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 				
 				downloaded = true;
 			}
-			catch(IOException e)
+			catch(IOException | InterruptedException e)
 			{
-				Log.warning("Error downloading file", e);
+				Log.warning("1: " + Thread.currentThread().getName() + " - Error downloading file", e);
 				element.getFileOut().deleteOnExit();
-				connection.reopen();
 			}
-			catch(InterruptedException | SftpException e)
+			catch(SftpException e)
 			{
-				Log.warning("Error downloading file", e);
+				Log.warning("2: " + Thread.currentThread().getName() + " - Error downloading file", e);
 				element.getFileOut().deleteOnExit();
+				if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed"))
+					connection.reopen();
 			}
 			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
 			result.setDownloadTime(System.currentTimeMillis() - startDownload);
 			
-			Log.info(String.format("%s - Downloaded file in %dms", Thread.currentThread().getName(),result.getDownloadTime()));
+			Log.info(String.format("%s - Downloaded file in %dms", Thread.currentThread().getName(), result.getDownloadTime()));
 		}
 		
 		connection.close();
