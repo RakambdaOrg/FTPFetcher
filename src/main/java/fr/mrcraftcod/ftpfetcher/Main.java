@@ -4,6 +4,7 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
+import fr.mrcraftcod.utils.base.Log;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,6 +40,7 @@ public class Main
 		FTPConnection connection = new FTPConnection();
 		ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>(fetchFolder(config, connection, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder"))));
 		connection.close();
+		Log.info(String.format("Found %d elements to download", downloadSet.size()));
 		
 		ExecutorService executor = Executors.newFixedThreadPool(4);
 		List<Future<List<DownloadResult>>> futures = new ArrayList<>();
@@ -56,7 +58,7 @@ public class Main
 		}
 		
 		executor.shutdown();
-		List<DownloadResult> results = futures.stream().map(f -> {
+		List<DownloadResult> results = futures.parallelStream().map(f -> {
 			try
 			{
 				return f.get();
@@ -68,13 +70,13 @@ public class Main
 			return null;
 		}).flatMap(Collection::stream).collect(Collectors.toList());
 		
-		System.out.format("Downloaded %d/%d elements\n", results.stream().filter(DownloadResult::isDownloaded).count(), results.size());
+		Log.info(String.format("Downloaded %d/%d elements", results.stream().filter(DownloadResult::isDownloaded).count(), results.size()));
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws InterruptedException, SftpException
 	{
 		ArrayList<DownloadElement> downloadElements = new ArrayList<>();
-		System.out.format("%s - Fetching folder %s\n", Thread.currentThread().getName(), folder);
+		Log.info(String.format("%s - Fetching folder %s", Thread.currentThread().getName(), folder));
 		
 		return Arrays.stream(connection.getClient().ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
 			try

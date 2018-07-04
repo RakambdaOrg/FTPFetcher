@@ -47,7 +47,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			results.add(result);
 			boolean downloaded = false;
 			
-			System.out.format("|- %s - Downloading file %s%s\n", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename());
+			Log.info(String.format("%s - Downloading file %s%s", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename()));
 			try(FileOutputStream fos = new FileOutputStream(element.getFileOut()))
 			{
 				connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos, new ProgressMonitor());
@@ -60,7 +60,6 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			}
 			catch(IOException | InterruptedException | SftpException e)
 			{
-				System.out.println("ERR");
 				Log.warning("Error downloading file: " + e.getMessage());
 				element.getFileOut().deleteOnExit();
 			}
