@@ -3,8 +3,8 @@ package fr.mrcraftcod.ftpfetcher;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
+import fr.mrcraftcod.utils.base.FileUtils;
 import fr.mrcraftcod.utils.base.Log;
-import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -72,7 +72,7 @@ public class Main
 		
 		List<DownloadResult> downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 		
-		Log.info(String.format("Downloaded %d/%d elements (%s)", downloadedSuccessfully.size(), results.size(), FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum())));
+		Log.info(String.format("Downloaded %d/%d elements (%s)", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum())));
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws InterruptedException, SftpException
@@ -122,7 +122,7 @@ public class Main
 			date = OffsetDateTime.parse(file.getFilename().substring(0, file.getFilename().indexOf("."))).format(dateTimeFormatter);
 		}
 		File fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
-		fr.mrcraftcod.utils.base.FileUtils.createDirectories(fileOut);
+		FileUtils.createDirectories(fileOut);
 		
 		return new DownloadElement(folder, file, fileOut);
 	}

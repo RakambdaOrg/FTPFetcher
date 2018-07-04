@@ -50,7 +50,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			Log.info(String.format("%s - Downloading file %s%s", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename()));
 			try(FileOutputStream fos = new FileOutputStream(element.getFileOut()))
 			{
-				connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos, new ProgressMonitor());
+				connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos);
 				
 				setAttributes(Paths.get(element.getFileOut().toURI()), FileTime.fromMillis(element.getFile().getAttrs().getATime() * 1000L));
 				
@@ -60,7 +60,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			}
 			catch(IOException | InterruptedException | SftpException e)
 			{
-				Log.warning("Error downloading file: " + e.getMessage());
+				Log.warning("Error downloading file", e);
 				element.getFileOut().deleteOnExit();
 			}
 			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
