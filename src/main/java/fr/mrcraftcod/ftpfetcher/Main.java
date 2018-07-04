@@ -1,6 +1,7 @@
 package fr.mrcraftcod.ftpfetcher;
 
 import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
@@ -34,23 +35,32 @@ public class Main
 		if(args.length > 0)
 			Settings.getInstance(args[0]);
 		
+		JSch.setConfig("StrictHostKeyChecking", "no");
+		
+		JSch jsch = new JSch();
+		File knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
+		jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
+		
 		Configuration config = new Configuration();
 		config.removeUseless();
 		
-		FTPConnection connection = new FTPConnection();
+		long startFetch = System.currentTimeMillis();
+		
+		FTPConnection connection = new FTPConnection(jsch);
 		ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>(fetchFolder(config, connection, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder"))));
 		connection.close();
-		Log.info(String.format("Found %d elements to download", downloadSet.size()));
+		Log.info(String.format("Found %d elements to download in %dms", downloadSet.size(), System.currentTimeMillis() - startFetch));
 		
-		ExecutorService executor = Executors.newFixedThreadPool(4);
-		List<Future<List<DownloadResult>>> futures = new ArrayList<>();
+		long startDownload = System.currentTimeMillis();
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		final List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 		
 		try
 		{
-			executor.submit(new FTPFetcher(config, downloadSet));
-			executor.submit(new FTPFetcher(config, downloadSet));
-			executor.submit(new FTPFetcher(config, downloadSet));
-			executor.submit(new FTPFetcher(config, downloadSet));
+			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
+			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
+			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
+			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
 		}
 		catch(Exception e)
 		{
@@ -68,11 +78,11 @@ public class Main
 				e.printStackTrace();
 			}
 			return null;
-		}).flatMap(Collection::stream).collect(Collectors.toList());
+		}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
 		
 		List<DownloadResult> downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 		
-		Log.info(String.format("Downloaded %d/%d elements (%s)", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum())));
+		Log.info(String.format("Downloaded %d/%d elements (%s) in %dms (avg: %f)", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), System.currentTimeMillis() - startDownload, downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(-1)));
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws InterruptedException, SftpException

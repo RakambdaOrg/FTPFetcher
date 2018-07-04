@@ -10,11 +10,23 @@ public class DownloadResult
 {
 	private final DownloadElement element;
 	private boolean downloaded;
+	private long downloadTime;
 	
 	public DownloadResult(DownloadElement element, boolean downloaded)
 	{
 		this.element = element;
 		this.downloaded = downloaded;
+		this.downloadTime = 0;
+	}
+	
+	public long getDownloadTime()
+	{
+		return downloadTime;
+	}
+	
+	public void setDownloadTime(long time)
+	{
+		this.downloadTime = time;
 	}
 	
 	public DownloadElement getElement()

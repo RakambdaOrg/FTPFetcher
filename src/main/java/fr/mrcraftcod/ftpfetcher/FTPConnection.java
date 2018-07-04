@@ -1,8 +1,6 @@
 package fr.mrcraftcod.ftpfetcher;
 
 import com.jcraft.jsch.*;
-import fr.mrcraftcod.utils.base.FileUtils;
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -13,17 +11,18 @@ import java.io.IOException;
  */
 public class FTPConnection
 {
-	private final Session session;
-	private final ChannelSftp sftpChannel;
+	private Session session;
+	private ChannelSftp sftpChannel;
+	private final JSch jsch;
 	
-	public FTPConnection() throws JSchException, IOException
+	public FTPConnection(JSch jsch) throws JSchException, IOException
 	{
-		JSch.setConfig("StrictHostKeyChecking", "no");
-		
-		JSch jsch = new JSch();
-		File knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
-		jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
-		
+		this.jsch = jsch;
+		connect();
+	}
+	
+	private void connect() throws JSchException, IOException
+	{
 		session = jsch.getSession(Settings.getString("ftpUser"), Settings.getString("ftpHost"));
 		session.setPassword(Settings.getString("ftpPass"));
 		
@@ -42,6 +41,12 @@ public class FTPConnection
 			sftpChannel.exit();
 		if(session != null && session.isConnected())
 			session.disconnect();
+	}
+	
+	public void reopen() throws IOException, JSchException
+	{
+		close();
+		connect();
 	}
 	
 	public ChannelSftp getClient()

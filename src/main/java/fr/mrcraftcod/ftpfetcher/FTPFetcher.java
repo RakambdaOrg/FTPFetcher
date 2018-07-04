@@ -1,5 +1,6 @@
 package fr.mrcraftcod.ftpfetcher;
 
+import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.Log;
@@ -27,9 +28,11 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 	
 	private final Configuration config;
 	private final ConcurrentLinkedQueue<DownloadElement> downloadSet;
+	private final JSch jsch;
 	
-	public FTPFetcher(Configuration config, ConcurrentLinkedQueue<DownloadElement> downloadSet)
+	public FTPFetcher(JSch jsch, Configuration config, ConcurrentLinkedQueue<DownloadElement> downloadSet)
 	{
+		this.jsch = jsch;
 		this.config = config;
 		this.downloadSet = downloadSet;
 	}
@@ -37,12 +40,13 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 	@Override
 	public List<DownloadResult> call() throws IOException, JSchException
 	{
-		FTPConnection connection = new FTPConnection();
+		FTPConnection connection = new FTPConnection(jsch);
 		List<DownloadResult> results = new LinkedList<>();
 		
 		DownloadElement element;
 		while((element = downloadSet.poll()) != null)
 		{
+			long startDownload = System.currentTimeMillis();
 			DownloadResult result = new DownloadResult(element, false);
 			results.add(result);
 			boolean downloaded = false;
@@ -58,12 +62,21 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 				
 				downloaded = true;
 			}
-			catch(IOException | InterruptedException | SftpException e)
+			catch(IOException e)
+			{
+				Log.warning("Error downloading file", e);
+				element.getFileOut().deleteOnExit();
+				connection.reopen();
+			}
+			catch(InterruptedException | SftpException e)
 			{
 				Log.warning("Error downloading file", e);
 				element.getFileOut().deleteOnExit();
 			}
 			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
+			result.setDownloadTime(System.currentTimeMillis() - startDownload);
+			
+			Log.info(String.format("%s - Downloaded file in %dms", Thread.currentThread().getName(),result.getDownloadTime()));
 		}
 		
 		connection.close();
