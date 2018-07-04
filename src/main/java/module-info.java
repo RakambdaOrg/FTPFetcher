@@ -8,4 +8,5 @@ module fr.mrcraftcod.FTPFetcher {
 	requires fr.mrcraftcod.utils.base;
 	requires fr.mrcraftcod.utils.config;
 	requires jsch;
+	requires org.apache.commons.io;
 }

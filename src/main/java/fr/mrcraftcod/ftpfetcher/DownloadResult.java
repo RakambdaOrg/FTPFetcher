@@ -17,6 +17,11 @@ public class DownloadResult
 		this.downloaded = downloaded;
 	}
 	
+	public DownloadElement getElement()
+	{
+		return element;
+	}
+	
 	public boolean isDownloaded()
 	{
 		return downloaded;
