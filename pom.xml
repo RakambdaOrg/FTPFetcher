@@ -102,7 +102,7 @@
     <distributionManagement>
         <repository>
             <id>mrcraftcod.write</id>
-            <url>${mrcraftcod.write.url}</url>
+            <url>${mrcraftcod.write.url.ftp}</url>
         </repository>
     </distributionManagement>
     <repositories>
@@ -120,17 +120,17 @@
         <dependency>
             <groupId>fr.mrcraftcod</groupId>
             <artifactId>utils.config</artifactId>
-            <version>3.0.0</version>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>fr.mrcraftcod</groupId>
             <artifactId>utils.base</artifactId>
-            <version>3.0.0</version>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>fr.mrcraftcod</groupId>
             <artifactId>utils.javafx</artifactId>
-            <version>3.0.0</version>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
