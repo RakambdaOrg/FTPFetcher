@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,7 +51,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			results.add(result);
 			boolean downloaded = false;
 			
-			Log.info(String.format("%s - Downloading file %s%s", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename()));
+			Log.info("%s - Downloading file %s%s", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename());
 			try(FileOutputStream fos = new FileOutputStream(element.getFileOut()))
 			{
 				connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos);
@@ -63,12 +64,12 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			}
 			catch(IOException | InterruptedException e)
 			{
-				Log.warning("1: " + Thread.currentThread().getName() + " - Error downloading file", e);
+				Log.warning(e, "1: %s - Error downloading file", Thread.currentThread().getName());
 				element.getFileOut().deleteOnExit();
 			}
 			catch(SftpException e)
 			{
-				Log.warning("2: " + Thread.currentThread().getName() + " - Error downloading file", e);
+				Log.warning(e, "2: %s - Error downloading file", Thread.currentThread().getName());
 				element.getFileOut().deleteOnExit();
 				if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed"))
 					connection.reopen();
@@ -76,7 +77,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
 			result.setDownloadTime(System.currentTimeMillis() - startDownload);
 			
-			Log.info(String.format("%s - Downloaded file in %dms", Thread.currentThread().getName(), result.getDownloadTime()));
+			Log.info("%s - Downloaded file in %s", Thread.currentThread().getName(), Duration.ofMillis(result.getDownloadTime()));
 		}
 		
 		connection.close();

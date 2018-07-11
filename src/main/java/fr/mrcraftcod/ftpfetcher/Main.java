@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -49,16 +50,14 @@ public class Main
 		FTPConnection connection = new FTPConnection(jsch);
 		ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>(fetchFolder(config, connection, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder"))));
 		connection.close();
-		Log.info(String.format("Found %d elements to download in %dms", downloadSet.size(), System.currentTimeMillis() - startFetch));
+		Log.info("Found %d elements to download in %dms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 		
 		long startDownload = System.currentTimeMillis();
-		ExecutorService executor = Executors.newFixedThreadPool(4);
+		ExecutorService executor = Executors.newFixedThreadPool(2);
 		final List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 		
 		try
 		{
-			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
-			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
 			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
 			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
 		}
@@ -82,13 +81,13 @@ public class Main
 		
 		List<DownloadResult> downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 		
-		Log.info(String.format("Downloaded %d/%d elements (%s) in %dms (avg: %f)", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), System.currentTimeMillis() - startDownload, downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(-1)));
+		Log.info("Downloaded %d/%d elements (%s) in %s (avg: %s)", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(-1L)));
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws InterruptedException, SftpException
 	{
 		ArrayList<DownloadElement> downloadElements = new ArrayList<>();
-		Log.info(String.format("%s - Fetching folder %s", Thread.currentThread().getName(), folder));
+		Log.info("%s - Fetching folder %s", Thread.currentThread().getName(), folder);
 		
 		return Arrays.stream(connection.getClient().ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
 			try
