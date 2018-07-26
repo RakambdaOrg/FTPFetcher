@@ -6,6 +6,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
 import fr.mrcraftcod.utils.base.Log;
+import org.apache.commons.cli.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -33,8 +34,33 @@ public class Main
 	
 	public static void main(String[] args) throws InterruptedException, ClassNotFoundException, IOException, JSchException, SftpException
 	{
-		if(args.length > 0)
-			Settings.getInstance(args[0]);
+		Options options = new Options();
+		
+		Option input = new Option("o", "options", true, "the settings properties");
+		input.setRequired(true);
+		options.addOption(input);
+		
+		Option output = new Option("t", "threads", false, "the number of threads to use");
+		output.setRequired(true);
+		options.addOption(output);
+		
+		CommandLineParser parser = new DefaultParser();
+		HelpFormatter formatter = new HelpFormatter();
+		CommandLine cmd = null;
+		
+		try
+		{
+			cmd = parser.parse(options, args);
+		}
+		catch(ParseException e)
+		{
+			System.out.println(e.getMessage());
+			formatter.printHelp("FTPFetcher", options);
+			
+			System.exit(1);
+		}
+		
+		Settings.getInstance(cmd.getOptionValue("threads"));
 		
 		JSch.setConfig("StrictHostKeyChecking", "no");
 		
@@ -53,7 +79,7 @@ public class Main
 		Log.info("Found %d elements to download in %dms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 		
 		long startDownload = System.currentTimeMillis();
-		ExecutorService executor = Executors.newFixedThreadPool(2);
+		ExecutorService executor = Executors.newFixedThreadPool(Integer.parseInt(cmd.getOptionValue("threads", "1")));
 		final List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 		
 		try
