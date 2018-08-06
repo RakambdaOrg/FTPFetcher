@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -40,8 +41,8 @@ public class Main
 		input.setRequired(true);
 		options.addOption(input);
 		
-		Option output = new Option("t", "threads", false, "the number of threads to use");
-		output.setRequired(true);
+		Option output = new Option("t", "threads", true, "the number of threads to use");
+		output.setRequired(false);
 		options.addOption(output);
 		
 		CommandLineParser parser = new DefaultParser();
@@ -60,7 +61,7 @@ public class Main
 			System.exit(1);
 		}
 		
-		Settings.getInstance(cmd.getOptionValue("threads"));
+		Settings.getInstance(cmd.getOptionValue("options"));
 		
 		JSch.setConfig("StrictHostKeyChecking", "no");
 		
@@ -78,14 +79,15 @@ public class Main
 		connection.close();
 		Log.info("Found %d elements to download in %dms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 		
+		int fetchers = Integer.parseInt(cmd.getOptionValue("threads", "1"));
+		
 		long startDownload = System.currentTimeMillis();
-		ExecutorService executor = Executors.newFixedThreadPool(Integer.parseInt(cmd.getOptionValue("threads", "1")));
-		final List<Future<List<DownloadResult>>> futures = new ArrayList<>();
+		ExecutorService executor = Executors.newFixedThreadPool(fetchers);
+		List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 		
 		try
 		{
-			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
-			futures.add(executor.submit(new FTPFetcher(jsch, config, downloadSet)));
+			futures = IntStream.range(0, fetchers).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet)).map(executor::submit).collect(Collectors.toList());
 		}
 		catch(Exception e)
 		{
@@ -110,9 +112,8 @@ public class Main
 		Log.info("Downloaded %d/%d elements (%s) in %s (avg: %s)", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(-1L)));
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws InterruptedException, SftpException
+	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws SftpException
 	{
-		ArrayList<DownloadElement> downloadElements = new ArrayList<>();
 		Log.info("%s - Fetching folder %s", Thread.currentThread().getName(), folder);
 		
 		return Arrays.stream(connection.getClient().ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
@@ -135,9 +136,9 @@ public class Main
 			{
 				if(f.getAttrs().isDir())
 					return fetchFolder(config, connection, f.getFilename() + "/", outPath.resolve(f.getFilename())).stream();
-				return Stream.of(downloadFile(config, folder, f, outPath.toFile()));
+				return Stream.of(downloadFile(folder, f, outPath.toFile()));
 			}
-			catch(InterruptedException | SftpException e)
+			catch(SftpException e)
 			{
 				e.printStackTrace();
 			}
@@ -145,7 +146,7 @@ public class Main
 		}).collect(Collectors.toList());
 	}
 	
-	private static DownloadElement downloadFile(Configuration config, String folder, ChannelSftp.LsEntry file, File folderOut)
+	private static DownloadElement downloadFile(String folder, ChannelSftp.LsEntry file, File folderOut)
 	{
 		String date;
 		try
