@@ -29,14 +29,12 @@ import java.util.stream.Stream;
  * @author Thomas Couchoud
  * @since 2017-12-09
  */
-public class Main
-{
+public class Main{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
 	
-	public static void main(String[] args) throws InterruptedException, ClassNotFoundException, IOException, JSchException, SftpException
-	{
+	public static void main(String[] args) throws InterruptedException, ClassNotFoundException, IOException, JSchException, SftpException{
 		Options options = new Options();
 		
 		Option input = new Option("o", "options", true, "the settings properties");
@@ -51,12 +49,10 @@ public class Main
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLine cmd = null;
 		
-		try
-		{
+		try{
 			cmd = parser.parse(options, args);
 		}
-		catch(ParseException e)
-		{
+		catch(ParseException e){
 			System.out.println(e.getMessage());
 			formatter.printHelp("FTPFetcher", options);
 			
@@ -89,23 +85,19 @@ public class Main
 		ExecutorService executor = Executors.newFixedThreadPool(fetchers);
 		List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 		
-		try
-		{
+		try{
 			futures = IntStream.range(0, fetchers).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet)).map(executor::submit).collect(Collectors.toList());
 		}
-		catch(Exception e)
-		{
+		catch(Exception e){
 			e.printStackTrace();
 		}
 		
 		executor.shutdown();
 		List<DownloadResult> results = futures.parallelStream().map(f -> {
-			try
-			{
+			try{
 				return f.get();
 			}
-			catch(InterruptedException | ExecutionException e)
-			{
+			catch(InterruptedException | ExecutionException e){
 				e.printStackTrace();
 			}
 			return null;
@@ -113,55 +105,54 @@ public class Main
 		
 		List<DownloadResult> downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 		
-		LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(-1L)));
+		LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws SftpException
-	{
-		LOGGER.info("{} - Fetching folder {}", Thread.currentThread().getName(), folder);
+	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws SftpException{
+		LOGGER.info("Fetching folder {}", folder);
 		
 		return Arrays.stream(connection.getClient().ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
-			try
-			{
-				if(f.getFilename().equals(".") || f.getFilename().equals(".."))
+			try{
+				if(f.getFilename().equals(".") || f.getFilename().equals("..")){
 					return false;
-				if(f.getAttrs().isDir())
+				}
+				if(f.getAttrs().isDir()){
 					return true;
-				if(!config.isDownloaded(Paths.get(folder).resolve(f.getFilename().replace(":", "."))))
+				}
+				if(!config.isDownloaded(Paths.get(folder).resolve(f.getFilename().replace(":", ".")))){
 					return true;
+				}
 			}
-			catch(InterruptedException e)
-			{
+			catch(InterruptedException e){
 				e.printStackTrace();
 			}
 			return false;
 		}).flatMap(f -> {
-			try
-			{
-				if(f.getAttrs().isDir())
+			try{
+				if(f.getAttrs().isDir()){
 					return fetchFolder(config, connection, f.getFilename() + "/", outPath.resolve(f.getFilename())).stream();
+				}
 				return Stream.of(downloadFile(folder, f, outPath.toFile()));
 			}
-			catch(SftpException e)
-			{
+			catch(SftpException e){
 				e.printStackTrace();
 			}
 			return null;
 		}).collect(Collectors.toList());
 	}
 	
-	private static DownloadElement downloadFile(String folder, ChannelSftp.LsEntry file, File folderOut)
-	{
+	private static DownloadElement downloadFile(String folder, ChannelSftp.LsEntry file, File folderOut){
 		String date;
-		try
-		{
+		try{
 			date = dateFormatter.format(new Date(Long.parseLong(file.getFilename().substring(0, file.getFilename().indexOf("."))) * 1000));
 		}
-		catch(NumberFormatException e)
-		{
+		catch(NumberFormatException e){
 			date = OffsetDateTime.parse(file.getFilename().substring(0, file.getFilename().indexOf("."))).format(dateTimeFormatter);
 		}
 		File fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
+		if(fileOut.exists()){
+			return null;
+		}
 		FileUtils.createDirectories(fileOut);
 		
 		return new DownloadElement(folder, file, fileOut);
