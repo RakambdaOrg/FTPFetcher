@@ -4,6 +4,8 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,7 +27,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class FTPFetcher implements Callable<List<DownloadResult>>
 {
-	
+	private static final Logger LOGGER = LoggerFactory.getLogger(FTPFetcher.class);
 	private final Configuration config;
 	private final ConcurrentLinkedQueue<DownloadElement> downloadSet;
 	private final JSch jsch;
@@ -51,7 +53,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			results.add(result);
 			boolean downloaded = false;
 			
-			Log.info("%s - Downloading file %s%s", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename());
+			LOGGER.info("{} - Downloading file {}{}", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename());
 			try(FileOutputStream fos = new FileOutputStream(element.getFileOut()))
 			{
 				connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos);
@@ -64,12 +66,12 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			}
 			catch(IOException | InterruptedException e)
 			{
-				Log.warning(e, "1: %s - Error downloading file", Thread.currentThread().getName());
+				LOGGER.warn("1: {} - Error downloading file", Thread.currentThread().getName(), e);
 				element.getFileOut().deleteOnExit();
 			}
 			catch(SftpException e)
 			{
-				Log.warning(e, "2: %s - Error downloading file", Thread.currentThread().getName());
+				LOGGER.warn("2: {} - Error downloading file", Thread.currentThread().getName(), e);
 				element.getFileOut().deleteOnExit();
 				if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed"))
 					connection.reopen();
@@ -77,7 +79,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>
 			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
 			result.setDownloadTime(System.currentTimeMillis() - startDownload);
 			
-			Log.info("%s - Downloaded file in %s", Thread.currentThread().getName(), Duration.ofMillis(result.getDownloadTime()));
+			LOGGER.info("{} - Downloaded file in {}", Thread.currentThread().getName(), Duration.ofMillis(result.getDownloadTime()));
 		}
 		
 		connection.close();

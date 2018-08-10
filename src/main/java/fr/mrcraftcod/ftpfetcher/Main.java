@@ -5,8 +5,9 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
-import fr.mrcraftcod.utils.base.Log;
 import org.apache.commons.cli.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ import java.util.stream.Stream;
  */
 public class Main
 {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
 	
@@ -77,9 +79,11 @@ public class Main
 		FTPConnection connection = new FTPConnection(jsch);
 		ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>(fetchFolder(config, connection, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder"))));
 		connection.close();
-		Log.info("Found %d elements to download in %dms", downloadSet.size(), System.currentTimeMillis() - startFetch);
+		LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 		
 		int fetchers = Integer.parseInt(cmd.getOptionValue("threads", "1"));
+		
+		LOGGER.info("Starting with {} downloaders", fetchers);
 		
 		long startDownload = System.currentTimeMillis();
 		ExecutorService executor = Executors.newFixedThreadPool(fetchers);
@@ -109,12 +113,12 @@ public class Main
 		
 		List<DownloadResult> downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 		
-		Log.info("Downloaded %d/%d elements (%s) in %s (avg: %s)", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(-1L)));
+		LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(-1L)));
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(Configuration config, FTPConnection connection, String folder, Path outPath) throws SftpException
 	{
-		Log.info("%s - Fetching folder %s", Thread.currentThread().getName(), folder);
+		LOGGER.info("{} - Fetching folder {}", Thread.currentThread().getName(), folder);
 		
 		return Arrays.stream(connection.getClient().ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
 			try
