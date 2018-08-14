@@ -138,7 +138,7 @@ public class Main{
 				e.printStackTrace();
 			}
 			return null;
-		}).collect(Collectors.toList());
+		}).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 	
 	private static DownloadElement downloadFile(String folder, ChannelSftp.LsEntry file, File folderOut){

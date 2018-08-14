@@ -6,12 +6,13 @@
 
     <groupId>mrcraftcod</groupId>
     <artifactId>FTPFetcher</artifactId>
-    <version>2.4</version>
+    <version>2.5</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>10</java.version>
         <main.class>fr.mrcraftcod.ftpfetcher.Main</main.class>
+        <mrcraftcod.utils>4.0.1</mrcraftcod.utils>
     </properties>
     <packaging>jar</packaging>
 
@@ -120,17 +121,17 @@
         <dependency>
             <groupId>fr.mrcraftcod</groupId>
             <artifactId>utils.config</artifactId>
-            <version>4.0.0</version>
+            <version>${mrcraftcod.utils}</version>
         </dependency>
         <dependency>
             <groupId>fr.mrcraftcod</groupId>
             <artifactId>utils.base</artifactId>
-            <version>4.0.0</version>
+            <version>${mrcraftcod.utils}</version>
         </dependency>
         <dependency>
             <groupId>fr.mrcraftcod</groupId>
             <artifactId>utils.javafx</artifactId>
-            <version>4.0.0</version>
+            <version>${mrcraftcod.utils}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
