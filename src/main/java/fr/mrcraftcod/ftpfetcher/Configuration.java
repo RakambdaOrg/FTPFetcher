@@ -18,7 +18,7 @@ public class Configuration extends SQLiteManager
 {
 	public Configuration() throws ClassNotFoundException, InterruptedException
 	{
-		super(new File(".", "FTPFetcher.db"), false);
+		super(new File(".", "FTPFetcher.db"));
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Downloaded(Filee VARCHAR(512) NOT NULL, DateDownload DATETIME,PRIMARY KEY(Filee));").waitSafely();
 	}
 	
