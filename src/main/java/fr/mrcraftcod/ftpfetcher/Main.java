@@ -41,6 +41,8 @@ public class Main{
 			System.exit(1);
 		}
 		touch(lockFile);
+		Configuration config = null;
+		
 		try{
 			final Options options = new Options();
 			
@@ -74,7 +76,7 @@ public class Main{
 			final File knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
 			jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
 			
-			final Configuration config = new Configuration();
+			config = new Configuration();
 			config.removeUseless();
 			
 			final long startFetch = System.currentTimeMillis();
@@ -93,7 +95,8 @@ public class Main{
 			List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 			
 			try{
-				futures = IntStream.range(0, fetchers).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet)).map(executor::submit).collect(Collectors.toList());
+				final Configuration finalConfig = config;
+				futures = IntStream.range(0, fetchers).mapToObj(i -> new FTPFetcher(jsch, finalConfig, downloadSet)).map(executor::submit).collect(Collectors.toList());
 			}
 			catch(final Exception e){
 				LOGGER.error("Error building fetchers", e);
@@ -116,6 +119,11 @@ public class Main{
 		}
 		catch(final Exception e){
 			LOGGER.error("Uncaught exception", e);
+		}
+		finally{
+			if(Objects.nonNull(config)){
+				config.close();
+			}
 		}
 		
 		FileUtils.forceDelete(lockFile);
