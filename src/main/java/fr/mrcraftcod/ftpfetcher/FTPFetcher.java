@@ -30,7 +30,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	private final ConcurrentLinkedQueue<DownloadElement> downloadSet;
 	private final JSch jsch;
 	
-	public FTPFetcher(JSch jsch, Configuration config, ConcurrentLinkedQueue<DownloadElement> downloadSet){
+	public FTPFetcher(final JSch jsch, final Configuration config, final ConcurrentLinkedQueue<DownloadElement> downloadSet){
 		this.jsch = jsch;
 		this.config = config;
 		this.downloadSet = downloadSet;
@@ -38,31 +38,31 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	
 	@Override
 	public List<DownloadResult> call() throws IOException, JSchException{
-		FTPConnection connection = new FTPConnection(jsch);
-		List<DownloadResult> results = new LinkedList<>();
+		final FTPConnection connection = new FTPConnection(jsch);
+		final List<DownloadResult> results = new LinkedList<>();
 		
 		DownloadElement element;
 		while((element = downloadSet.poll()) != null){
-			long startDownload = System.currentTimeMillis();
-			DownloadResult result = new DownloadResult(element, false);
+			final long startDownload = System.currentTimeMillis();
+			final DownloadResult result = new DownloadResult(element, false);
 			results.add(result);
 			boolean downloaded = element.getFileOut().exists();
 			
 			LOGGER.info("{} - Downloading file {}{}", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename());
 			
 			if(!downloaded){
-				try(FileOutputStream fos = new FileOutputStream(element.getFileOut())){
+				try(final FileOutputStream fos = new FileOutputStream(element.getFileOut())){
 					connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos);
 					
 					setAttributes(Paths.get(element.getFileOut().toURI()), FileTime.fromMillis(element.getFile().getAttrs().getATime() * 1000L));
 					
 					downloaded = true;
 				}
-				catch(IOException e){
+				catch(final IOException e){
 					LOGGER.warn("IO - Error downloading file", e);
 					element.getFileOut().deleteOnExit();
 				}
-				catch(SftpException e){
+				catch(final SftpException e){
 					LOGGER.warn("SFTP - Error downloading file", e);
 					element.getFileOut().deleteOnExit();
 					if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed")){
@@ -75,7 +75,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 				try{
 					config.setDownloaded(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")));
 				}
-				catch(InterruptedException e){
+				catch(final InterruptedException e){
 					LOGGER.error("Error setting downloaded status in DB", e);
 				}
 			}
@@ -90,13 +90,13 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 		return results;
 	}
 	
-	private static void setAttributes(Path path, FileTime fileTime){
-		for(String attribute : Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime")){
+	private static void setAttributes(final Path path, final FileTime fileTime){
+		for(final String attribute : Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime")){
 			try{
 				Files.setAttribute(path, attribute, fileTime);
 			}
-			catch(Exception e){
-				e.printStackTrace();
+			catch(final Exception e){
+				LOGGER.warn("Error setting file attributes for {}", path, e);
 			}
 		}
 	}

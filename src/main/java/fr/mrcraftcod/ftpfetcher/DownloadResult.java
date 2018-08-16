@@ -6,40 +6,40 @@ package fr.mrcraftcod.ftpfetcher;
  * @author Thomas Couchoud
  * @since 2018-07-04
  */
-public class DownloadResult
+class DownloadResult
 {
 	private final DownloadElement element;
 	private boolean downloaded;
 	private long downloadTime;
 	
-	public DownloadResult(DownloadElement element, boolean downloaded)
+	DownloadResult(final DownloadElement element, final boolean downloaded)
 	{
 		this.element = element;
 		this.downloaded = downloaded;
 		this.downloadTime = 0;
 	}
 	
-	public long getDownloadTime()
+	long getDownloadTime()
 	{
 		return downloadTime;
 	}
 	
-	public void setDownloadTime(long time)
+	void setDownloadTime(final long time)
 	{
 		this.downloadTime = time;
 	}
 	
-	public DownloadElement getElement()
+	DownloadElement getElement()
 	{
 		return element;
 	}
 	
-	public boolean isDownloaded()
+	boolean isDownloaded()
 	{
 		return downloaded;
 	}
 	
-	public void setDownloaded(boolean downloaded)
+	void setDownloaded(final boolean downloaded)
 	{
 		this.downloaded = downloaded;
 	}

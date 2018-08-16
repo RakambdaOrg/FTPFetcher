@@ -9,30 +9,30 @@ import java.io.File;
  * @author Thomas Couchoud
  * @since 2018-07-04
  */
-public class DownloadElement
+class DownloadElement
 {
 	private final String folder;
 	private final ChannelSftp.LsEntry file;
 	private final File fileOut;
 	
-	public DownloadElement(String folder, ChannelSftp.LsEntry file, File fileOut)
+	DownloadElement(final String folder, final ChannelSftp.LsEntry file, final File fileOut)
 	{
 		this.folder = folder;
 		this.file = file;
 		this.fileOut = fileOut;
 	}
 	
-	public String getFolder()
+	String getFolder()
 	{
 		return folder;
 	}
 	
-	public ChannelSftp.LsEntry getFile()
+	ChannelSftp.LsEntry getFile()
 	{
 		return file;
 	}
 	
-	public File getFileOut()
+	File getFileOut()
 	{
 		return fileOut;
 	}

@@ -9,13 +9,13 @@ import java.io.IOException;
  * @author Thomas Couchoud
  * @since 2018-07-04
  */
-public class FTPConnection
+class FTPConnection
 {
 	private Session session;
 	private ChannelSftp sftpChannel;
 	private final JSch jsch;
 	
-	public FTPConnection(JSch jsch) throws JSchException, IOException
+	FTPConnection(final JSch jsch) throws JSchException, IOException
 	{
 		this.jsch = jsch;
 		connect();
@@ -28,14 +28,14 @@ public class FTPConnection
 		
 		session.connect();
 		
-		Channel channel = session.openChannel("sftp");
+		final Channel channel = session.openChannel("sftp");
 		channel.connect();
 		
 		session.setServerAliveInterval(20000);
 		sftpChannel = (ChannelSftp) channel;
 	}
 	
-	public void close()
+	void close()
 	{
 		if(sftpChannel != null && sftpChannel.isConnected())
 			sftpChannel.exit();
@@ -43,13 +43,13 @@ public class FTPConnection
 			session.disconnect();
 	}
 	
-	public void reopen() throws IOException, JSchException
+	void reopen() throws IOException, JSchException
 	{
 		close();
 		connect();
 	}
 	
-	public ChannelSftp getClient()
+	ChannelSftp getClient()
 	{
 		return sftpChannel;
 	}

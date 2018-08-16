@@ -3,6 +3,8 @@ package fr.mrcraftcod.ftpfetcher;
 import fr.mrcraftcod.utils.config.PreparedStatementFiller;
 import fr.mrcraftcod.utils.config.SQLValue;
 import fr.mrcraftcod.utils.config.SQLiteManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -14,15 +16,15 @@ import java.time.LocalDateTime;
  * @author Thomas Couchoud
  * @since 2017-12-09
  */
-public class Configuration extends SQLiteManager
-{
-	public Configuration() throws ClassNotFoundException, InterruptedException
+class Configuration extends SQLiteManager
+{private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
+	Configuration() throws ClassNotFoundException, InterruptedException
 	{
 		super(new File(".", "FTPFetcher.db"));
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Downloaded(Filee VARCHAR(512) NOT NULL, DateDownload DATETIME,PRIMARY KEY(Filee));").waitSafely();
 	}
 	
-	public boolean isDownloaded(Path path) throws InterruptedException
+	boolean isDownloaded(final Path path) throws InterruptedException
 	{
 		final boolean[] downloaded = new boolean[1];
 		sendQueryRequest("SELECT * FROM Downloaded WHERE Filee='" + path.toString().replace("\\", "/") + "';").done(resultSet -> {
@@ -32,23 +34,23 @@ public class Configuration extends SQLiteManager
 			}
 			catch(SQLException e)
 			{
-				e.printStackTrace();
+				LOGGER.error("Error getting downloaded status for {}", path, e);
 			}
 		}).waitSafely();
 		return downloaded[0];
 	}
 	
-	public void removeUseless()
+	void removeUseless()
 	{
 		try{
 			sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-8 days');").waitSafely();
 		}
-		catch(InterruptedException e){
-			e.printStackTrace();
+		catch(final InterruptedException e){
+			LOGGER.error("Error removing useless entries in DB", e);
 		}
 	}
 	
-	public void setDownloaded(Path path) throws InterruptedException
+	void setDownloaded(final Path path) throws InterruptedException
 	{
 		sendPreparedUpdateRequest("INSERT INTO Downloaded(Filee,DateDownload) VALUES(?,?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString()), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString()))).waitSafely();
 	}

@@ -1,5 +1,7 @@
 package fr.mrcraftcod.ftpfetcher;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -12,37 +14,38 @@ import java.util.Properties;
  * @author Thomas Couchoud
  * @since 2018-01-24
  */
-public class Settings
+class Settings
 {
-	public static final String DEFAULT_NAME = "./FTPFetcher.properties";
+	private static final Logger LOGGER = LoggerFactory.getLogger(Settings.class);
+	private static final String DEFAULT_NAME = "./FTPFetcher.properties";
 	private final Properties properties;
 	private static Settings INSTANCE = null;
 	
-	private Settings(String name) throws IOException
+	private Settings(final String name) throws IOException
 	{
 		this.properties = new Properties();
-		InputStream is = new FileInputStream(new File(name));
+		final InputStream is = new FileInputStream(new File(name));
 		try(is)
 		{
 			this.properties.load(is);
 		}
-		catch(IOException e)
+		catch(final IOException e)
 		{
-			e.printStackTrace();
+			LOGGER.error("Error reading configuration file");
 		}
 	}
 	
-	public static String getString(String key) throws IOException
+	static String getString(final String key) throws IOException
 	{
 		return getInstance().properties.getProperty(key);
 	}
 	
-	public static Settings getInstance() throws IOException
+	private static Settings getInstance() throws IOException
 	{
 		return getInstance(DEFAULT_NAME);
 	}
 	
-	public static Settings getInstance(String name) throws IOException
+	static Settings getInstance(final String name) throws IOException
 	{
 		if(INSTANCE == null)
 			INSTANCE = new Settings(name);
