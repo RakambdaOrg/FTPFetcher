@@ -35,12 +35,12 @@ public class Main{
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
 	
 	public static void main(final String[] args) throws IOException{
-		final File lockFile = new File(".", ".ftpFetcher.lock");
-		if(lockFile.exists()){
-			LOGGER.error("Program is already running, lock file {} is present", lockFile.getAbsolutePath());
+		final Path lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
+		if(lockFile.toFile().exists()){
+			LOGGER.error("Program is already running, lock file {} is present", lockFile.toFile());
 			System.exit(1);
 		}
-		touch(lockFile);
+		touch(lockFile.toFile());
 		Configuration config = null;
 		
 		try{
@@ -126,7 +126,7 @@ public class Main{
 			}
 		}
 		
-		FileUtils.forceDelete(lockFile);
+		FileUtils.forceDelete(lockFile.toFile());
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath) throws SftpException{
