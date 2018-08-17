@@ -41,6 +41,12 @@ public class Main{
 			System.exit(1);
 		}
 		touch(lockFile.toFile());
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			LOGGER.info("Program shutting down, removing lock file");
+			FileUtils.forceDelete(lockFile.toFile());
+		}));
+		
 		Configuration config = null;
 		
 		try{
@@ -125,8 +131,6 @@ public class Main{
 				config.close();
 			}
 		}
-		
-		FileUtils.forceDelete(lockFile.toFile());
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath) throws SftpException{
