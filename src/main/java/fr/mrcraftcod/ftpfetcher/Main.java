@@ -34,20 +34,20 @@ public class Main{
 	private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
 	
-	public static void main(final String[] args) throws IOException{
+	public static void main(final String[] args) throws IOException, InterruptedException, ClassNotFoundException{
 		final Path lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
 		if(lockFile.toFile().exists()){
 			LOGGER.error("Program is already running, lock file {} is present", lockFile.toFile());
 			System.exit(1);
 		}
 		touch(lockFile.toFile());
+		final Configuration config = new Configuration();
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			config.close();
 			LOGGER.info("Program shutting down, removing lock file");
 			FileUtils.forceDelete(lockFile.toFile());
 		}));
-		
-		Configuration config = null;
 		
 		try{
 			final Options options = new Options();
@@ -82,7 +82,6 @@ public class Main{
 			final File knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
 			jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
 			
-			config = new Configuration();
 			config.removeUseless();
 			
 			final long startFetch = System.currentTimeMillis();
@@ -125,11 +124,6 @@ public class Main{
 		}
 		catch(final Exception e){
 			LOGGER.error("Uncaught exception", e);
-		}
-		finally{
-			if(Objects.nonNull(config)){
-				config.close();
-			}
 		}
 	}
 	
