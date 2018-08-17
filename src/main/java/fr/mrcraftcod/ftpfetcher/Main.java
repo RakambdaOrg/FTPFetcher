@@ -37,7 +37,7 @@ public class Main{
 	public static void main(final String[] args) throws IOException{
 		final File lockFile = new File(".", ".ftpFetcher.lock");
 		if(lockFile.exists()){
-			LOGGER.error("Program is already running");
+			LOGGER.error("Program is already running, lock file {} is present", lockFile);
 			System.exit(1);
 		}
 		touch(lockFile);
