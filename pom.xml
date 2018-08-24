@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>10</java.version>
         <main.class>fr.mrcraftcod.ftpfetcher.Main</main.class>
-        <mrcraftcod.utils>4.1.0</mrcraftcod.utils>
+        <mrcraftcod.utils>4.2.0</mrcraftcod.utils>
     </properties>
     <packaging>jar</packaging>
 

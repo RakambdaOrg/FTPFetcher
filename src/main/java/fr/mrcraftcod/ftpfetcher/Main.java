@@ -100,8 +100,7 @@ public class Main{
 			List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 			
 			try{
-				final Configuration finalConfig = config;
-				futures = IntStream.range(0, fetchers).mapToObj(i -> new FTPFetcher(jsch, finalConfig, downloadSet)).map(executor::submit).collect(Collectors.toList());
+				futures = IntStream.range(0, fetchers).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet)).map(executor::submit).collect(Collectors.toList());
 			}
 			catch(final Exception e){
 				LOGGER.error("Error building fetchers", e);
@@ -142,7 +141,7 @@ public class Main{
 					return true;
 				}
 			}
-			catch(InterruptedException e){
+			catch(Exception e){
 				LOGGER.error("", e);
 			}
 			return false;
