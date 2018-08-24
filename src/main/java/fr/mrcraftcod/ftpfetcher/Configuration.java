@@ -42,6 +42,7 @@ class Configuration extends SQLiteManager
 	
 	void removeUseless()
 	{
+		LOGGER.info("Removing useless entries from database");
 		try{
 			sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-8 days');").waitSafely();
 		}
