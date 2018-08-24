@@ -40,6 +40,12 @@ class Configuration extends SQLiteManager
 		return downloaded[0];
 	}
 	
+	@Override
+	public void close(){
+		LOGGER.info("Closing SQL Connection...");
+		super.close();
+	}
+	
 	void removeUseless()
 	{
 		LOGGER.info("Removing useless entries from database");

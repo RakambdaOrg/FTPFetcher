@@ -41,13 +41,10 @@ public class Main{
 			System.exit(1);
 		}
 		touch(lockFile.toFile());
+		lockFile.toFile().deleteOnExit();
 		final Configuration config = new Configuration();
 		
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			config.close();
-			LOGGER.info("Program shutting down, removing lock file");
-			FileUtils.forceDelete(lockFile.toFile());
-		}));
+		Runtime.getRuntime().addShutdownHook(new Thread(config::close));
 		
 		try{
 			final Options options = new Options();
