@@ -3,6 +3,7 @@ package fr.mrcraftcod.ftpfetcher;
 import fr.mrcraftcod.utils.config.PreparedStatementFiller;
 import fr.mrcraftcod.utils.config.SQLValue;
 import fr.mrcraftcod.utils.config.SQLiteManager;
+import org.jdeferred.FailCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -50,8 +51,8 @@ class Configuration extends SQLiteManager
 		}
 	}
 	
-	void setDownloaded(final Path path) throws InterruptedException
+	void setDownloaded(final Path path, final FailCallback<Throwable> onFail) throws InterruptedException
 	{
-		sendPreparedUpdateRequest("INSERT INTO Downloaded(Filee,DateDownload) VALUES(?,?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString()), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString()))).waitSafely();
+		sendPreparedUpdateRequest("INSERT INTO Downloaded(Filee,DateDownload) VALUES(?,?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString()), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString()))).fail(onFail).waitSafely();
 	}
 }

@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com) on 09/12/2017.
@@ -41,8 +42,9 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 		final FTPConnection connection = new FTPConnection(jsch);
 		final List<DownloadResult> results = new LinkedList<>();
 		
+		AtomicBoolean stop = new AtomicBoolean(false);
 		DownloadElement element;
-		while((element = downloadSet.poll()) != null){
+		while(!stop.get() && (element = downloadSet.poll()) != null){
 			final long startDownload = System.currentTimeMillis();
 			final DownloadResult result = new DownloadResult(element, false);
 			results.add(result);
@@ -73,7 +75,10 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			
 			if(downloaded){
 				try{
-					config.setDownloaded(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")));
+					config.setDownloaded(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")), throwable -> {
+						LOGGER.error("Stopping fetcher due to SQL error", throwable);
+						stop.set(true);
+					});
 				}
 				catch(final InterruptedException e){
 					LOGGER.error("Error setting downloaded status in DB", e);
