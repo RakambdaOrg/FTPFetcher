@@ -32,7 +32,8 @@ import java.util.stream.Stream;
 public class Main{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
-	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
+	private static final DateTimeFormatter dateTimeFormatterOutput = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
+	private static final DateTimeFormatter dateTimeFormatterInput = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ssZ");
 	
 	public static void main(final String[] args) throws IOException, InterruptedException, ClassNotFoundException{
 		final Path lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
@@ -157,12 +158,16 @@ public class Main{
 	}
 	
 	private static DownloadElement downloadFile(final String folder, final ChannelSftp.LsEntry file, final File folderOut){
-		String date;
+		String date = file.getFilename();
 		try{
 			date = dateFormatter.format(new Date(Long.parseLong(file.getFilename().substring(0, file.getFilename().indexOf("."))) * 1000));
 		}
 		catch(final NumberFormatException e){
-			date = OffsetDateTime.parse(file.getFilename().substring(0, file.getFilename().indexOf("."))).format(dateTimeFormatter);
+			try{
+				date = OffsetDateTime.parse(file.getFilename().substring(0, file.getFilename().lastIndexOf(".")), dateTimeFormatterInput).format(dateTimeFormatterOutput);
+			}
+			catch(final Exception e2){
+			}
 		}
 		final File fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
 		if(fileOut.exists()){
