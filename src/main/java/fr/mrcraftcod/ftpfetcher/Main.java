@@ -48,12 +48,12 @@ public class Main{
 		Runtime.getRuntime().addShutdownHook(new Thread(config::close));
 		
 		try{
-			Parameters parameters = new Parameters();
-			CmdLineParser parser = new CmdLineParser(parameters);
+			final Parameters parameters = new Parameters();
+			final CmdLineParser parser = new CmdLineParser(parameters);
 			try{
 				parser.parseArgument(args);
 			}
-			catch(Exception ex){
+			catch(final Exception ex){
 				parser.printUsage(System.out);
 				return;
 			}
@@ -134,15 +134,20 @@ public class Main{
 		}).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 	
+	private static void touch(final File file) throws IOException{
+		if(!file.exists()){
+			new FileOutputStream(file).close();
+		}
+	}
+	
 	private static DownloadElement downloadFile(final String folder, final ChannelSftp.LsEntry file, final File folderOut){
-		String date;
-		var datePart = file.getFilename().substring(0, file.getFilename().lastIndexOf("."));
+		final String date;
+		final var datePart = file.getFilename().substring(0, file.getFilename().lastIndexOf("."));
 		try{
 			if(datePart.chars().allMatch(Character::isDigit)){
 				date = outDateFormatter.format(new Date(Long.parseLong(datePart) * 1000));
 			}
 			else{
-				
 				date = OffsetDateTime.from(dateTimeFormatter.parse(datePart)).format(outDateTimeFormatter);
 			}
 		}
@@ -157,11 +162,5 @@ public class Main{
 		FileUtils.createDirectories(fileOut);
 		
 		return new DownloadElement(folder, file, fileOut);
-	}
-	
-	public static void touch(final File file) throws IOException{
-		if(!file.exists()){
-			new FileOutputStream(file).close();
-		}
 	}
 }

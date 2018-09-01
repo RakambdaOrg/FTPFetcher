@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +41,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	public List<DownloadResult> call() throws IOException, JSchException{
 		final FTPConnection connection = new FTPConnection(jsch);
 		final List<DownloadResult> results = new LinkedList<>();
+		final List<Path> toSetDownloaded = new ArrayList<>();
 		
 		DownloadElement element;
 		while((element = downloadSet.poll()) != null){
@@ -72,12 +74,11 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			}
 			
 			if(downloaded){
-				try{
-					config.setDownloaded(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")));
-				}
-				catch(final InterruptedException e){
-					LOGGER.error("Error setting downloaded status in DB", e);
-				}
+				toSetDownloaded.add(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")));
+			}
+			
+			if(toSetDownloaded.size() > 25){
+				writeDownloaded(toSetDownloaded);
 			}
 			
 			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
@@ -87,6 +88,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 		}
 		
 		connection.close();
+		writeDownloaded(toSetDownloaded);
 		return results;
 	}
 	
@@ -98,6 +100,18 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			catch(final Exception e){
 				LOGGER.warn("Error setting file attributes for {}", path, e);
 			}
+		}
+	}
+	
+	private void writeDownloaded(final List<Path> toSetDownloaded){
+		try{
+			if(toSetDownloaded.size() > 0){
+				config.setDownloaded(toSetDownloaded);
+				toSetDownloaded.clear();
+			}
+		}
+		catch(final InterruptedException e){
+			LOGGER.error("Error setting downloaded status in DB", e);
 		}
 	}
 }
