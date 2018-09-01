@@ -108,26 +108,18 @@ public class Main{
 		}
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath) throws SftpException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath) throws SftpException, InterruptedException{
 		LOGGER.info("Fetching folder {}", folder);
-		var array = connection.getClient().ls(folder).toArray();
+		Object[] array = connection.getClient().ls(folder).toArray();
 		LOGGER.info("Fetched folder {}, verifying files", folder);
-		return Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
-			try{
-				if(f.getFilename().equals(".") || f.getFilename().equals("..")){
-					return false;
-				}
-				if(f.getAttrs().isDir()){
-					return true;
-				}
-				if(!config.isDownloaded(Paths.get(folder).resolve(f.getFilename().replace(":", ".")))){
-					return true;
-				}
+		return config.getOnlyNotDownloaded(folder, Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).collect(Collectors.toList())).stream().sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
+			if(f.getFilename().equals(".") || f.getFilename().equals("..")){
+				return false;
 			}
-			catch(Exception e){
-				LOGGER.error("", e);
+			if(f.getAttrs().isDir()){
+				return true;
 			}
-			return false;
+			return true;
 		}).flatMap(f -> {
 			try{
 				if(f.getAttrs().isDir()){
