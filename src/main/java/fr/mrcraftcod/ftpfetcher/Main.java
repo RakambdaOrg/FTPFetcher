@@ -4,7 +4,7 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
-import org.apache.commons.cli.*;
+import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -31,9 +31,9 @@ import java.util.stream.Stream;
  */
 public class Main{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-	private static final DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
-	private static final DateTimeFormatter dateTimeFormatterOutput = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
-	private static final DateTimeFormatter dateTimeFormatterInput = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ssZ");
+	private static final DateFormat outDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
+	private static final DateTimeFormatter outDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
+	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ssZ");
 	
 	public static void main(final String[] args) throws IOException, InterruptedException, ClassNotFoundException{
 		final Path lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
@@ -48,31 +48,17 @@ public class Main{
 		Runtime.getRuntime().addShutdownHook(new Thread(config::close));
 		
 		try{
-			final Options options = new Options();
-			
-			final Option input = new Option("o", "options", true, "the settings properties");
-			input.setRequired(true);
-			options.addOption(input);
-			
-			final Option output = new Option("t", "threads", true, "the number of threads to use");
-			output.setRequired(false);
-			options.addOption(output);
-			
-			final CommandLineParser parser = new DefaultParser();
-			final HelpFormatter formatter = new HelpFormatter();
-			CommandLine cmd = null;
-			
+			Parameters parameters = new Parameters();
+			CmdLineParser parser = new CmdLineParser(parameters);
 			try{
-				cmd = parser.parse(options, args);
+				parser.parseArgument(args);
 			}
-			catch(final ParseException e){
-				LOGGER.warn(e.getMessage());
-				formatter.printHelp("FTPFetcher", options);
-				
-				System.exit(1);
+			catch(Exception ex){
+				parser.printUsage(System.out);
+				return;
 			}
 			
-			Settings.getInstance(cmd.getOptionValue("options"));
+			Settings.getInstance(parameters.getProperties().getAbsolutePath());
 			
 			JSch.setConfig("StrictHostKeyChecking", "no");
 			
@@ -89,16 +75,14 @@ public class Main{
 			connection.close();
 			LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 			
-			final int fetchers = Integer.parseInt(cmd.getOptionValue("threads", "1"));
-			
-			LOGGER.info("Starting with {} downloaders", fetchers);
+			LOGGER.info("Starting with {} downloaders", parameters.getThreadCount());
 			
 			final long startDownload = System.currentTimeMillis();
-			final ExecutorService executor = Executors.newFixedThreadPool(fetchers);
+			final ExecutorService executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 			List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 			
 			try{
-				futures = IntStream.range(0, fetchers).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet)).map(executor::submit).collect(Collectors.toList());
+				futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet)).map(executor::submit).collect(Collectors.toList());
 			}
 			catch(final Exception e){
 				LOGGER.error("Error building fetchers", e);
@@ -126,8 +110,9 @@ public class Main{
 	
 	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath) throws SftpException{
 		LOGGER.info("Fetching folder {}", folder);
-		
-		return Arrays.stream(connection.getClient().ls(folder).toArray()).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
+		var array = connection.getClient().ls(folder).toArray();
+		LOGGER.info("Fetched folder {}, verifying files", folder);
+		return Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
 			try{
 				if(f.getFilename().equals(".") || f.getFilename().equals("..")){
 					return false;
@@ -150,7 +135,7 @@ public class Main{
 				}
 				return Stream.of(downloadFile(folder, f, outPath.toFile()));
 			}
-			catch(SftpException e){
+			catch(Exception e){
 				LOGGER.error("Error fetching folder {}", f.getLongname(), e);
 			}
 			return null;
@@ -158,16 +143,20 @@ public class Main{
 	}
 	
 	private static DownloadElement downloadFile(final String folder, final ChannelSftp.LsEntry file, final File folderOut){
-		String date = file.getFilename();
+		String date;
+		var datePart = file.getFilename().substring(0, file.getFilename().lastIndexOf("."));
 		try{
-			date = dateFormatter.format(new Date(Long.parseLong(file.getFilename().substring(0, file.getFilename().indexOf("."))) * 1000));
+			if(datePart.chars().allMatch(Character::isDigit)){
+				date = outDateFormatter.format(new Date(Long.parseLong(datePart) * 1000));
+			}
+			else{
+				
+				date = OffsetDateTime.from(dateTimeFormatter.parse(datePart)).format(outDateTimeFormatter);
+			}
 		}
 		catch(final NumberFormatException e){
-			try{
-				date = OffsetDateTime.parse(file.getFilename().substring(0, file.getFilename().lastIndexOf(".")), dateTimeFormatterInput).format(dateTimeFormatterOutput);
-			}
-			catch(final Exception e2){
-			}
+			LOGGER.error("Error parsing filename {}", datePart);
+			return null;
 		}
 		final File fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
 		if(fileOut.exists()){
