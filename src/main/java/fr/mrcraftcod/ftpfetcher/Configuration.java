@@ -65,6 +65,7 @@ class Configuration extends SQLiteManager{
 	public void close(){
 		LOGGER.info("Closing SQL Connection...");
 		super.close();
+		LOGGER.info("SQL Connection closed");
 	}
 	
 	void removeUseless(){

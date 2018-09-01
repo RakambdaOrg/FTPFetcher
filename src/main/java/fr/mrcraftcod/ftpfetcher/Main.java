@@ -110,8 +110,8 @@ public class Main{
 	
 	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath) throws SftpException, InterruptedException{
 		LOGGER.info("Fetching folder {}", folder);
-		Object[] array = connection.getClient().ls(folder).toArray();
-		LOGGER.info("Fetched folder {}, verifying files", folder);
+		final Object[] array = connection.getClient().ls(folder).toArray();
+		LOGGER.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
 		return config.getOnlyNotDownloaded(folder, Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).collect(Collectors.toList())).stream().sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
 			if(f.getFilename().equals(".") || f.getFilename().equals("..")){
 				return false;
