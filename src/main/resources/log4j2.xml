@@ -14,9 +14,15 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <Root level="info">
+        <Logger name="fr.mrcraftcod.utils" level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Logger name="fr.mrcraftcod.ftpfetcher" level="info">
             <AppenderRef ref="Console" />
             <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Root level="error">
         </Root>
     </Loggers>
 </Configuration>
