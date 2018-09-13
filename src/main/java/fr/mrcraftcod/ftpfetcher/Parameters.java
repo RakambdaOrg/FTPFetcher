@@ -49,5 +49,7 @@ public class Parameters{
 		String levelName = value.toString();
 		Level level = Level.getLevel(levelName);
 		Configurator.setRootLevel(level);
+		Configurator.setLevel("fr.mrcraftcod.utils", level);
+		Configurator.setLevel("fr.mrcraftcod.ftpfetcher", level);
 	}
 }
