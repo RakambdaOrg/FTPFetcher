@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -69,23 +70,25 @@ class Configuration extends SQLiteManager{
 		super.close();
 	}
 	
-	void removeUseless(){
+	int removeUseless(){
 		LOGGER.info("Removing useless entries from database");
+		final AtomicInteger result = new AtomicInteger(-1);
 		try{
-			sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-8 days');").waitSafely();
+			sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-8 days');").done(result::set).waitSafely();
 		}
 		catch(final InterruptedException e){
 			LOGGER.error("Error removing useless entries in DB", e);
 		}
+		return result.get();
 	}
 	
 	void setDownloaded(final Path path) throws InterruptedException{
-		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES(?,?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString()), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString()))).waitSafely();
+		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES(?,?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/")), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString()))).waitSafely();
 	}
 	
 	void setDownloaded(final Collection<Path> paths) throws InterruptedException{
 		final var placeHolders = IntStream.range(0, paths.size()).mapToObj(o -> "(?,?)").collect(Collectors.joining(","));
-		final SQLValue[] values = paths.stream().flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path.toString()), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString())).stream()).toArray(SQLValue[]::new);
+		final SQLValue[] values = paths.stream().map(path -> path.toString().replace("\\", "/")).flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString())).stream()).toArray(SQLValue[]::new);
 		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES " + placeHolders + ";", new PreparedStatementFiller(values)).waitSafely();
 		LOGGER.info("Set downloaded status for {} items", paths.size());
 	}
