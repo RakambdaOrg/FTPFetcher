@@ -68,7 +68,7 @@ public class Main{
 			final File knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
 			jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
 			
-			config.removeUseless();
+			LOGGER.info("Removed {} useless entries", config.removeUseless());
 			
 			final long startFetch = System.currentTimeMillis();
 			final ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>();

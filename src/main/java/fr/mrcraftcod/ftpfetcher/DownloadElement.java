@@ -36,4 +36,9 @@ class DownloadElement
 	{
 		return fileOut;
 	}
+	
+	@Override
+	public String toString(){
+		return getFolder() + getFile().getFilename();
+	}
 }
