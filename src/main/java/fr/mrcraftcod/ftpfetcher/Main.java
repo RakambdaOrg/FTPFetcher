@@ -2,8 +2,10 @@ package fr.mrcraftcod.ftpfetcher;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
+import org.json.JSONObject;
 import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,10 +71,22 @@ public class Main{
 			config.removeUseless();
 			
 			final long startFetch = System.currentTimeMillis();
+			final ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>();
 			
-			final FTPConnection connection = new FTPConnection(jsch);
-			final ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>(fetchFolder(config, connection, Settings.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(Settings.getString("localFolder"))));
-			connection.close();
+			for(Object folderFetchObj : Settings.getArray("folders")){
+				try{
+					final JSONObject folderFetch = (JSONObject) folderFetchObj;
+					final FTPConnection connection = new FTPConnection(jsch);
+					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.getBoolean("recursive")));
+					connection.close();
+				}
+				catch(JSchException | IOException e){
+					LOGGER.error("Error fetching folder {}", ((JSONObject) folderFetchObj).getString("ftpFolder"), e);
+				}
+				catch(Exception e){
+					LOGGER.error("Error fetching folder {}", folderFetchObj, e);
+				}
+			}
 			LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 			
 			LOGGER.info("Starting with {} downloaders", parameters.getThreadCount());
@@ -108,7 +122,7 @@ public class Main{
 		}
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath) throws SftpException, InterruptedException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, boolean recursive) throws SftpException, InterruptedException{
 		LOGGER.info("Fetching folder {}", folder);
 		final Object[] array = connection.getClient().ls(folder).toArray();
 		LOGGER.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
@@ -122,8 +136,8 @@ public class Main{
 			return true;
 		}).flatMap(f -> {
 			try{
-				if(f.getAttrs().isDir()){
-					return fetchFolder(config, connection, f.getFilename() + "/", outPath.resolve(f.getFilename())).stream();
+				if(recursive && f.getAttrs().isDir()){
+					return fetchFolder(config, connection, f.getFilename() + "/", outPath.resolve(f.getFilename()), true).stream();
 				}
 				return Stream.of(downloadFile(folder, f, outPath.toFile()));
 			}
