@@ -17,7 +17,7 @@ class DownloadElement
 	
 	DownloadElement(final String folder, final ChannelSftp.LsEntry file, final File fileOut)
 	{
-		this.folder = folder;
+		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.file = file;
 		this.fileOut = fileOut;
 	}

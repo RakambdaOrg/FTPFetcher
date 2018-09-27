@@ -137,7 +137,7 @@ public class Main{
 		}).flatMap(f -> {
 			try{
 				if(recursive && f.getAttrs().isDir()){
-					return fetchFolder(config, connection, f.getFilename() + "/", outPath.resolve(f.getFilename()), true).stream();
+					return fetchFolder(config, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true).stream();
 				}
 				return Stream.of(downloadFile(folder, f, outPath.toFile()));
 			}
