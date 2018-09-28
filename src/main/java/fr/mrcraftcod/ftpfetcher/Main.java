@@ -36,6 +36,7 @@ public class Main{
 	private static final DateFormat outDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
 	private static final DateTimeFormatter outDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ssZ");
+	private static ExecutorService executor;
 	
 	public static void main(final String[] args) throws IOException, InterruptedException, ClassNotFoundException{
 		final Path lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
@@ -47,7 +48,12 @@ public class Main{
 		lockFile.toFile().deleteOnExit();
 		final Configuration config = new Configuration();
 		
-		Runtime.getRuntime().addShutdownHook(new Thread(config::close));
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			if(executor != null){
+				executor.shutdownNow();
+			}
+			config.close();
+		}));
 		
 		try{
 			final Parameters parameters = new Parameters();
@@ -92,7 +98,7 @@ public class Main{
 			LOGGER.info("Starting with {} downloaders", parameters.getThreadCount());
 			
 			final long startDownload = System.currentTimeMillis();
-			final ExecutorService executor = Executors.newFixedThreadPool(parameters.getThreadCount());
+			executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 			List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 			
 			try{
@@ -120,6 +126,7 @@ public class Main{
 		catch(final Exception e){
 			LOGGER.error("Uncaught exception", e);
 		}
+		System.exit(0);
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive) throws SftpException, InterruptedException{
