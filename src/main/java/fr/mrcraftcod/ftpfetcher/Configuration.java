@@ -32,7 +32,7 @@ class Configuration extends SQLiteManager{
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Downloaded(Filee VARCHAR(512) NOT NULL, DateDownload DATETIME,PRIMARY KEY(Filee));").waitSafely();
 	}
 	
-	public Collection<ChannelSftp.LsEntry> getOnlyNotDownloaded(final String folder, final Collection<ChannelSftp.LsEntry> entries) throws InterruptedException{
+	Collection<ChannelSftp.LsEntry> getOnlyNotDownloaded(final String folder, final Collection<ChannelSftp.LsEntry> entries) throws InterruptedException{
 		final HashMap<String, ChannelSftp.LsEntry> files = new HashMap<>();
 		for(final ChannelSftp.LsEntry entry : entries){
 			files.put(Paths.get(folder).resolve(entry.getFilename().replace(":", ".")).toString().replace("\\", "/"), entry);

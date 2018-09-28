@@ -2,8 +2,6 @@ package fr.mrcraftcod.ftpfetcher;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,7 +13,6 @@ import java.nio.file.Paths;
  * @since 2018-01-24
  */
 class Settings{
-	private static final Logger LOGGER = LoggerFactory.getLogger(Settings.class);
 	private static final String DEFAULT_NAME = "./FTPFetcher.json";
 	private final JSONObject json;
 	private static Settings INSTANCE = null;
@@ -39,7 +36,7 @@ class Settings{
 		return INSTANCE;
 	}
 	
-	public static JSONArray getArray(String key) throws IOException{
+	static JSONArray getArray(final String key) throws IOException{
 		return getInstance(DEFAULT_NAME).json.getJSONArray(key);
 	}
 }

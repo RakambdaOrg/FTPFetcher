@@ -27,7 +27,7 @@ public class Parameters{
 	}
 	
 	@Option(name = "-p", aliases = "--properties", usage = "The log4j2 properties to use")
-	public void setProperties(File value){
+	public void setProperties(final File value){
 		this.properties = value;
 	}
 	
@@ -36,7 +36,7 @@ public class Parameters{
 	}
 	
 	@Option(name = "-t", aliases = "--threads", usage = "The number of threads to use (must be >= 1)")
-	public void setThreadCount(int value){
+	public void setThreadCount(final int value){
 		if(value < -0){
 			throw new IllegalArgumentException("value must be >= 0");
 		}
@@ -45,9 +45,9 @@ public class Parameters{
 	}
 	
 	@Option(name = "-l", aliases = "--logLevel", usage = "The log level")
-	public void setLogLevel(LogLevel value){
-		String levelName = value.toString();
-		Level level = Level.getLevel(levelName);
+	public void setLogLevel(final LogLevel value){
+		final String levelName = value.toString();
+		final Level level = Level.getLevel(levelName);
 		Configurator.setRootLevel(level);
 		Configurator.setLevel("fr.mrcraftcod.utils", level);
 		Configurator.setLevel("fr.mrcraftcod.ftpfetcher", level);

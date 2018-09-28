@@ -73,17 +73,17 @@ public class Main{
 			final long startFetch = System.currentTimeMillis();
 			final ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>();
 			
-			for(Object folderFetchObj : Settings.getArray("folders")){
+			for(final Object folderFetchObj : Settings.getArray("folders")){
 				try{
 					final JSONObject folderFetch = (JSONObject) folderFetchObj;
 					final FTPConnection connection = new FTPConnection(jsch);
 					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.getBoolean("recursive")));
 					connection.close();
 				}
-				catch(JSchException | IOException e){
+				catch(final JSchException | IOException e){
 					LOGGER.error("Error fetching folder {}", ((JSONObject) folderFetchObj).getString("ftpFolder"), e);
 				}
-				catch(Exception e){
+				catch(final Exception e){
 					LOGGER.error("Error fetching folder {}", folderFetchObj, e);
 				}
 			}
@@ -122,7 +122,7 @@ public class Main{
 		}
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, boolean recursive) throws SftpException, InterruptedException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive) throws SftpException, InterruptedException{
 		LOGGER.info("Fetching folder {}", folder);
 		final Object[] array = connection.getClient().ls(folder).toArray();
 		LOGGER.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
