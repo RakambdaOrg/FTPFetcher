@@ -33,18 +33,18 @@ class Configuration extends SQLiteManager{
 	}
 	
 	Collection<ChannelSftp.LsEntry> getOnlyNotDownloaded(final String folder, final Collection<ChannelSftp.LsEntry> entries) throws InterruptedException{
-		final HashMap<String, ChannelSftp.LsEntry> files = new HashMap<>();
-		for(final ChannelSftp.LsEntry entry : entries){
+		final var files = new HashMap<String, ChannelSftp.LsEntry>();
+		for(final var entry : entries){
 			files.put(Paths.get(folder).resolve(entry.getFilename().replace(":", ".")).toString().replace("\\", "/"), entry);
 		}
-		final String filesQuery = files.keySet().stream().map(val -> "\"" + val + "\"").collect(Collectors.joining(","));
+		final var filesQuery = files.keySet().stream().map(val -> "\"" + val + "\"").collect(Collectors.joining(","));
 		sendQueryRequest("SELECT Filee FROM Downloaded WHERE Filee IN (" + filesQuery + ")").done(resultSet -> {
 			try{
 				while(resultSet.next()){
 					files.remove(resultSet.getString("Filee"));
 				}
 			}
-			catch(SQLException e){
+			catch(final SQLException e){
 				LOGGER.error("Error getting downloaded files for path {}", folder, e);
 			}
 		}).waitSafely();
@@ -52,7 +52,7 @@ class Configuration extends SQLiteManager{
 	}
 	
 	boolean isDownloaded(final Path path) throws InterruptedException{
-		final boolean[] downloaded = new boolean[1];
+		final var downloaded = new boolean[1];
 		sendQueryRequest("SELECT * FROM Downloaded WHERE Filee='" + path.toString().replace("\\", "/") + "';").done(resultSet -> {
 			try{
 				downloaded[0] = resultSet.next();
@@ -72,7 +72,7 @@ class Configuration extends SQLiteManager{
 	
 	int removeUseless(){
 		LOGGER.info("Removing useless entries from database");
-		final AtomicInteger result = new AtomicInteger(-1);
+		final var result = new AtomicInteger(-1);
 		try{
 			sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-8 days');").done(result::set).waitSafely();
 		}
@@ -88,7 +88,7 @@ class Configuration extends SQLiteManager{
 	
 	void setDownloaded(final Collection<Path> paths) throws InterruptedException{
 		final var placeHolders = IntStream.range(0, paths.size()).mapToObj(o -> "(?,?)").collect(Collectors.joining(","));
-		final SQLValue[] values = paths.stream().map(path -> path.toString().replace("\\", "/")).flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString())).stream()).toArray(SQLValue[]::new);
+		final var values = paths.stream().map(path -> path.toString().replace("\\", "/")).flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString())).stream()).toArray(SQLValue[]::new);
 		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES " + placeHolders + ";", new PreparedStatementFiller(values)).waitSafely();
 		LOGGER.info("Set downloaded status for {} items", paths.size());
 	}

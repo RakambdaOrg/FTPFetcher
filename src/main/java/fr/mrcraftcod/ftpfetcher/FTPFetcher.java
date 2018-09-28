@@ -39,21 +39,21 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	
 	@Override
 	public List<DownloadResult> call() throws IOException, JSchException{
-		final FTPConnection connection = new FTPConnection(jsch);
-		final List<DownloadResult> results = new LinkedList<>();
-		final List<Path> toSetDownloaded = new ArrayList<>();
+		final var connection = new FTPConnection(jsch);
+		final var results = new LinkedList<DownloadResult>();
+		final var toSetDownloaded = new ArrayList<Path>();
 		
 		DownloadElement element;
 		while((element = downloadSet.poll()) != null){
-			final long startDownload = System.currentTimeMillis();
-			final DownloadResult result = new DownloadResult(element, false);
+			final var startDownload = System.currentTimeMillis();
+			final var result = new DownloadResult(element, false);
 			results.add(result);
-			boolean downloaded = element.getFileOut().exists();
+			var downloaded = element.getFileOut().exists();
 			
 			LOGGER.info("{} - Downloading file {}{}", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename());
 			
 			if(!downloaded){
-				try(final FileOutputStream fos = new FileOutputStream(element.getFileOut())){
+				try(final var fos = new FileOutputStream(element.getFileOut())){
 					connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos);
 					
 					setAttributes(Paths.get(element.getFileOut().toURI()), FileTime.fromMillis(element.getFile().getAttrs().getATime() * 1000L));
@@ -93,7 +93,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	}
 	
 	private static void setAttributes(final Path path, final FileTime fileTime){
-		for(final String attribute : Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime")){
+		for(final var attribute : Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime")){
 			try{
 				Files.setAttribute(path, attribute, fileTime);
 			}

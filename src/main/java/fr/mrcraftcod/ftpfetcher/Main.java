@@ -39,14 +39,14 @@ public class Main{
 	private static ExecutorService executor;
 	
 	public static void main(final String[] args) throws IOException, InterruptedException, ClassNotFoundException{
-		final Path lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
+		final var lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
 		if(lockFile.toFile().exists()){
 			LOGGER.error("Program is already running, lock file {} is present", lockFile.toFile());
 			System.exit(1);
 		}
 		touch(lockFile.toFile());
 		lockFile.toFile().deleteOnExit();
-		final Configuration config = new Configuration();
+		final var config = new Configuration();
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			if(executor != null){
@@ -56,8 +56,8 @@ public class Main{
 		}));
 		
 		try{
-			final Parameters parameters = new Parameters();
-			final CmdLineParser parser = new CmdLineParser(parameters);
+			final var parameters = new Parameters();
+			final var parser = new CmdLineParser(parameters);
 			try{
 				parser.parseArgument(args);
 			}
@@ -70,24 +70,30 @@ public class Main{
 			
 			JSch.setConfig("StrictHostKeyChecking", "no");
 			
-			final JSch jsch = new JSch();
-			final File knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
+			final var jsch = new JSch();
+			final var knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
 			jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
 			
 			LOGGER.info("Removed {} useless entries", config.removeUseless());
 			
-			final long startFetch = System.currentTimeMillis();
-			final ConcurrentLinkedQueue<DownloadElement> downloadSet = new ConcurrentLinkedQueue<>();
+			final var startFetch = System.currentTimeMillis();
+			final var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
 			
-			for(final Object folderFetchObj : Settings.getArray("folders")){
+			for(final var folderFetchObj : Settings.getArray("folders")){
 				try{
-					final JSONObject folderFetch = (JSONObject) folderFetchObj;
-					final FTPConnection connection = new FTPConnection(jsch);
+					final var folderFetch = (JSONObject) folderFetchObj;
+					final var connection = new FTPConnection(jsch);
 					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.getBoolean("recursive")));
 					connection.close();
 				}
-				catch(final JSchException | IOException e){
-					LOGGER.error("Error fetching folder {}", ((JSONObject) folderFetchObj).getString("ftpFolder"), e);
+				catch(final JSchException | IOException | SftpException e){
+					var folder = ((JSONObject) folderFetchObj).getString("ftpFolder");
+					if(e.getMessage().equals("No such file")){
+						LOGGER.warn("Folder {} doesn't exist", folder);
+					}
+					else{
+						LOGGER.error("Error fetching folder {}", folder, e);
+					}
 				}
 				catch(final Exception e){
 					LOGGER.error("Error fetching folder {}", folderFetchObj, e);
@@ -97,7 +103,7 @@ public class Main{
 			
 			LOGGER.info("Starting with {} downloaders", parameters.getThreadCount());
 			
-			final long startDownload = System.currentTimeMillis();
+			final var startDownload = System.currentTimeMillis();
 			executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 			List<Future<List<DownloadResult>>> futures = new ArrayList<>();
 			
@@ -109,7 +115,7 @@ public class Main{
 			}
 			
 			executor.shutdown();
-			final List<DownloadResult> results = futures.parallelStream().map(f -> {
+			final var results = futures.parallelStream().map(f -> {
 				try{
 					return f.get();
 				}
@@ -119,7 +125,7 @@ public class Main{
 				return null;
 			}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
 			
-			final List<DownloadResult> downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
+			final var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 			
 			LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 		}
@@ -131,7 +137,7 @@ public class Main{
 	
 	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive) throws SftpException, InterruptedException{
 		LOGGER.info("Fetching folder {}", folder);
-		final Object[] array = connection.getClient().ls(folder).toArray();
+		final var array = connection.getClient().ls(folder).toArray();
 		LOGGER.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
 		return config.getOnlyNotDownloaded(folder, Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).collect(Collectors.toList())).stream().sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
 			if(f.getFilename().equals(".") || f.getFilename().equals("..")){
@@ -176,7 +182,7 @@ public class Main{
 			LOGGER.error("Error parsing filename {}", datePart);
 			return null;
 		}
-		final File fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
+		final var fileOut = new File(folderOut, date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
 		if(fileOut.exists()){
 			return null;
 		}

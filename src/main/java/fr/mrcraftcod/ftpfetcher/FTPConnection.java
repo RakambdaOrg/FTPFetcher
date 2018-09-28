@@ -1,6 +1,9 @@
 package fr.mrcraftcod.ftpfetcher;
 
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 import java.io.IOException;
 
 /**
@@ -28,7 +31,7 @@ class FTPConnection
 		
 		session.connect();
 		
-		final Channel channel = session.openChannel("sftp");
+		final var channel = session.openChannel("sftp");
 		channel.connect();
 		
 		session.setServerAliveInterval(20000);

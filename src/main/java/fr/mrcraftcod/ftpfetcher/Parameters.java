@@ -46,8 +46,8 @@ public class Parameters{
 	
 	@Option(name = "-l", aliases = "--logLevel", usage = "The log level")
 	public void setLogLevel(final LogLevel value){
-		final String levelName = value.toString();
-		final Level level = Level.getLevel(levelName);
+		final var levelName = value.toString();
+		final var level = Level.getLevel(levelName);
 		Configurator.setRootLevel(level);
 		Configurator.setLevel("fr.mrcraftcod.utils", level);
 		Configurator.setLevel("fr.mrcraftcod.ftpfetcher", level);
