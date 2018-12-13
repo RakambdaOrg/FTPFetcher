@@ -26,19 +26,14 @@ public class Parameters{
 		return this.properties;
 	}
 	
-	@Option(name = "-p", aliases = "--properties", usage = "The log4j2 properties to use")
-	public void setProperties(final File value){
-		this.properties = value;
-	}
-	
 	public int getThreadCount(){
 		return this.threadCount;
 	}
 	
 	@Option(name = "-t", aliases = "--threads", usage = "The number of threads to use (must be >= 1)")
 	public void setThreadCount(final int value){
-		if(value < -0){
-			throw new IllegalArgumentException("value must be >= 0");
+		if(value <= 0){
+			throw new IllegalArgumentException("value must be > 0");
 		}
 		
 		this.threadCount = value;
@@ -49,7 +44,11 @@ public class Parameters{
 		final var levelName = value.toString();
 		final var level = Level.getLevel(levelName);
 		Configurator.setRootLevel(level);
-		Configurator.setLevel("fr.mrcraftcod.utils", level);
-		Configurator.setLevel("fr.mrcraftcod.ftpfetcher", level);
+		Configurator.setLevel("fr.mrcraftcod", level);
+	}
+	
+	@Option(name = "-p", aliases = "--properties", usage = "The log4j2 properties to use", required = true)
+	public void setProperties(final File value){
+		this.properties = value;
 	}
 }
