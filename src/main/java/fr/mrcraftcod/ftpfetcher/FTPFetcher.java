@@ -50,7 +50,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			results.add(result);
 			var downloaded = element.getFileOut().exists();
 			
-			LOGGER.info("{} - Downloading file {}{}", Thread.currentThread().getName(), element.getFolder(), element.getFile().getFilename());
+			LOGGER.info("Downloading file {}{}", element.getFolder(), element.getFile().getFilename());
 			
 			if(!downloaded){
 				try(final var fos = new FileOutputStream(element.getFileOut())){

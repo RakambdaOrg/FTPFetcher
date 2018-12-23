@@ -103,7 +103,7 @@
 
     <distributionManagement>
         <repository>
-            <id>mrcraftcod.write</id>
+            <id>mrcraftcod.write.ftp</id>
             <url>${mrcraftcod.write.url.ftp}</url>
         </repository>
     </distributionManagement>

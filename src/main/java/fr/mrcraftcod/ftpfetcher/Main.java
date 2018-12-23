@@ -87,7 +87,7 @@ public class Main{
 					connection.close();
 				}
 				catch(final JSchException | IOException | SftpException e){
-					var folder = ((JSONObject) folderFetchObj).getString("ftpFolder");
+					final var folder = ((JSONObject) folderFetchObj).getString("ftpFolder");
 					if(e.getMessage().equals("No such file")){
 						LOGGER.warn("Folder {} doesn't exist", folder);
 					}
@@ -139,7 +139,7 @@ public class Main{
 		LOGGER.info("Fetching folder {}", folder);
 		final var array = connection.getClient().ls(folder).toArray();
 		LOGGER.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
-		return config.getOnlyNotDownloaded(folder, Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).collect(Collectors.toList())).stream().sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
+		final var toDL = config.getOnlyNotDownloaded(folder, Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).collect(Collectors.toList())).stream().sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename)).filter(f -> {
 			if(f.getFilename().equals(".") || f.getFilename().equals("..")){
 				return false;
 			}
@@ -159,6 +159,9 @@ public class Main{
 			}
 			return null;
 		}).filter(Objects::nonNull).collect(Collectors.toList());
+		
+		LOGGER.info("Verified folder {}, {} elements to download", folder, toDL.size());
+		return toDL;
 	}
 	
 	private static void touch(final File file) throws IOException{
