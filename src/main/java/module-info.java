@@ -11,7 +11,7 @@ module FTPFetcher {
 	requires jsch;
 	requires jdeferred.core;
 	requires args4j;
-	requires json;
+	requires org.json;
 	requires org.apache.commons.io;
 	requires org.apache.logging.log4j;
 	requires org.apache.logging.log4j.core;
