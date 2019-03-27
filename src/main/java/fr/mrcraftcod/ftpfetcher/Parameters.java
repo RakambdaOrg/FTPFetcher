@@ -10,12 +10,13 @@ import java.io.File;
  * @author Thomas Couchoud
  * @since 2018-09-01
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class Parameters{
 	@Parameter(names = {
 			"-t",
 			"--threads"
 	}, description = "The number of threads to use (must be >= 1)")
-	private final int threadCount = 1;
+	private int threadCount = 1;
 	
 	@Parameter(names = {
 			"-p",
