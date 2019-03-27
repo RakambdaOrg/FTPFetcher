@@ -1,8 +1,7 @@
 package fr.mrcraftcod.ftpfetcher;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.kohsuke.args4j.Option;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.converters.FileConverter;
 import java.io.File;
 
 /**
@@ -12,12 +11,17 @@ import java.io.File;
  * @since 2018-09-01
  */
 public class Parameters{
-	private int threadCount = 1;
-	private File properties;
+	@Parameter(names = {
+			"-t",
+			"--threads"
+	}, description = "The number of threads to use (must be >= 1)")
+	private final int threadCount = 1;
 	
-	enum LogLevel{
-		TRACE, DEBUG, INFO, WARN, ERROR, FATAL,
-	}
+	@Parameter(names = {
+			"-p",
+			"--properties"
+	}, description = "The settings properties to use", converter = FileConverter.class, required = true)
+	private File properties;
 	
 	public Parameters(){
 	}
@@ -28,27 +32,5 @@ public class Parameters{
 	
 	public int getThreadCount(){
 		return this.threadCount;
-	}
-	
-	@Option(name = "-t", aliases = "--threads", usage = "The number of threads to use (must be >= 1)")
-	public void setThreadCount(final int value){
-		if(value <= 0){
-			throw new IllegalArgumentException("value must be > 0");
-		}
-		
-		this.threadCount = value;
-	}
-	
-	@Option(name = "-l", aliases = "--logLevel", usage = "The log level")
-	public void setLogLevel(final LogLevel value){
-		final var levelName = value.toString();
-		final var level = Level.getLevel(levelName);
-		Configurator.setRootLevel(level);
-		Configurator.setLevel("fr.mrcraftcod", level);
-	}
-	
-	@Option(name = "-p", aliases = "--properties", usage = "The log4j2 properties to use", required = true)
-	public void setProperties(final File value){
-		this.properties = value;
 	}
 }

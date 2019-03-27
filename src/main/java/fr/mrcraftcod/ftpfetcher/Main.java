@@ -1,12 +1,13 @@
 package fr.mrcraftcod.ftpfetcher;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
 import org.json.JSONObject;
-import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -57,12 +58,12 @@ public class Main{
 		
 		try{
 			final var parameters = new Parameters();
-			final var parser = new CmdLineParser(parameters);
 			try{
-				parser.parseArgument(args);
+				JCommander.newBuilder().addObject(parameters).build().parse(args);
 			}
-			catch(final Exception ex){
-				parser.printUsage(System.out);
+			catch(final ParameterException e){
+				LOGGER.error("Failed to parse arguments", e);
+				e.usage();
 				return;
 			}
 			
