@@ -33,15 +33,15 @@ public class CLIParameters{
 	public CLIParameters(){
 	}
 	
-	public File getProperties(){
-		return this.properties;
+	public File getDatabaseFile(){
+		return databaseFile.getAbsoluteFile();
 	}
 	
 	public int getThreadCount(){
 		return this.threadCount;
 	}
 	
-	public File getDatabaseFile(){
-		return databaseFile;
+	public File getProperties(){
+		return this.properties.getAbsoluteFile();
 	}
 }
