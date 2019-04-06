@@ -11,7 +11,7 @@ import java.io.File;
  * @since 2018-09-01
  */
 @SuppressWarnings("FieldMayBeFinal")
-public class Parameters{
+public class CLIParameters{
 	@Parameter(names = {
 			"-t",
 			"--threads"
@@ -24,7 +24,13 @@ public class Parameters{
 	}, description = "The settings properties to use", converter = FileConverter.class, required = true)
 	private File properties;
 	
-	public Parameters(){
+	@Parameter(names = {
+			"-db",
+			"--database"
+	}, description = "The path to the database to store downloads to", converter = FileConverter.class)
+	private File databaseFile = new File(".", "FTPFetcher.db");
+	
+	public CLIParameters(){
 	}
 	
 	public File getProperties(){
@@ -33,5 +39,9 @@ public class Parameters{
 	
 	public int getThreadCount(){
 		return this.threadCount;
+	}
+	
+	public File getDatabaseFile(){
+		return databaseFile;
 	}
 }

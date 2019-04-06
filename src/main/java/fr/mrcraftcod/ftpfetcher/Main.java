@@ -47,7 +47,18 @@ public class Main{
 		}
 		touch(lockFile.toFile());
 		lockFile.toFile().deleteOnExit();
-		final var config = new Configuration();
+		
+		final var parameters = new CLIParameters();
+		try{
+			JCommander.newBuilder().addObject(parameters).build().parse(args);
+		}
+		catch(final ParameterException e){
+			LOGGER.error("Failed to parse arguments", e);
+			e.usage();
+			return;
+		}
+		
+		final var config = new Configuration(parameters.getDatabaseFile());
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			if(executor != null){
@@ -57,16 +68,6 @@ public class Main{
 		}));
 		
 		try{
-			final var parameters = new Parameters();
-			try{
-				JCommander.newBuilder().addObject(parameters).build().parse(args);
-			}
-			catch(final ParameterException e){
-				LOGGER.error("Failed to parse arguments", e);
-				e.usage();
-				return;
-			}
-			
 			Settings.getInstance(parameters.getProperties().getAbsolutePath());
 			
 			JSch.setConfig("StrictHostKeyChecking", "no");
