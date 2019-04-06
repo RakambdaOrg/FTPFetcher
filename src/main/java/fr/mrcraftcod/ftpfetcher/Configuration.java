@@ -27,8 +27,8 @@ import java.util.stream.IntStream;
 class Configuration extends SQLiteManager{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
 	
-	Configuration() throws ClassNotFoundException, InterruptedException{
-		super(new File(".", "FTPFetcher.db"));
+	Configuration(final File dbFile) throws ClassNotFoundException, InterruptedException{
+		super(dbFile);
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Downloaded(Filee VARCHAR(512) NOT NULL, DateDownload DATETIME,PRIMARY KEY(Filee));").waitSafely();
 	}
 	
