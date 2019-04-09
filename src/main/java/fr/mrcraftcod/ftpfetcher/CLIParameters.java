@@ -30,6 +30,12 @@ public class CLIParameters{
 	}, description = "The path to the database to store downloads to", converter = FileConverter.class)
 	private File databaseFile = new File(".", "FTPFetcher.db");
 	
+	@Parameter(names = {
+			"-h",
+			"--help"
+	}, help = true)
+	private boolean help = false;
+	
 	public CLIParameters(){
 	}
 	
