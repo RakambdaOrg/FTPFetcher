@@ -22,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -85,7 +86,7 @@ public class Main{
 				try{
 					final var folderFetch = (JSONObject) folderFetchObj;
 					final var connection = new FTPConnection(jsch);
-					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.getBoolean("recursive")));
+					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.getBoolean("recursive"), Pattern.compile(folderFetch.optString("fileFilter", ".*"))));
 					connection.close();
 				}
 				catch(final JSchException | IOException | SftpException e){
@@ -137,7 +138,7 @@ public class Main{
 		System.exit(0);
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive) throws SftpException, InterruptedException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter) throws SftpException, InterruptedException{
 		LOGGER.info("Fetching folder {}", folder);
 		final var array = connection.getClient().ls(folder).toArray();
 		LOGGER.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
@@ -152,9 +153,12 @@ public class Main{
 		}).flatMap(f -> {
 			try{
 				if(recursive && f.getAttrs().isDir()){
-					return fetchFolder(config, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true).stream();
+					return fetchFolder(config, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), recursive, fileFilter).stream();
 				}
-				return Stream.of(downloadFile(folder, f, outPath.toFile()));
+				if(fileFilter.matcher(f.getFilename()).matches()){
+					return Stream.of(downloadFile(folder, f, outPath.toFile()));
+				}
+				return Stream.empty();
 			}
 			catch(Exception e){
 				LOGGER.error("Error fetching folder {}", f.getLongname(), e);
