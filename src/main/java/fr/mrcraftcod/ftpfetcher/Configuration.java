@@ -74,7 +74,7 @@ class Configuration extends SQLiteManager{
 		LOGGER.info("Removing useless entries from database");
 		final var result = new AtomicInteger(-1);
 		try{
-			sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-8 days');").done(result::set).waitSafely();
+			sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-15 days');").done(result::set).waitSafely();
 		}
 		catch(final InterruptedException e){
 			LOGGER.error("Error removing useless entries in DB", e);
