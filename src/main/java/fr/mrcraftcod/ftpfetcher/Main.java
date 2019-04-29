@@ -41,14 +41,6 @@ public class Main{
 	private static ExecutorService executor;
 	
 	public static void main(final String[] args) throws IOException, InterruptedException, ClassNotFoundException{
-		final var lockFile = Paths.get(".ftpFetcher.lock").normalize().toAbsolutePath();
-		if(lockFile.toFile().exists()){
-			LOGGER.error("Program is already running, lock file {} is present", lockFile.toFile());
-			System.exit(1);
-		}
-		touch(lockFile.toFile());
-		lockFile.toFile().deleteOnExit();
-		
 		final var parameters = new CLIParameters();
 		try{
 			JCommander.newBuilder().addObject(parameters).build().parse(args);
@@ -58,6 +50,14 @@ public class Main{
 			e.usage();
 			return;
 		}
+		
+		final var lockFile = Paths.get(parameters.getDatabaseFile().toURI()).resolveSibling(parameters.getDatabaseFile().getName() + ".lock").normalize().toAbsolutePath();
+		if(lockFile.toFile().exists()){
+			LOGGER.error("Program is already running, lock file {} is present", lockFile.toFile());
+			System.exit(1);
+		}
+		touch(lockFile.toFile());
+		lockFile.toFile().deleteOnExit();
 		
 		final var config = new Configuration(parameters.getDatabaseFile());
 		
