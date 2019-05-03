@@ -104,7 +104,7 @@ public class Main{
 			}
 			LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 			
-			LOGGER.info("Starting with {} downloaders", parameters.getThreadCount());
+			LOGGER.info("Starting to download {} ({}) with {} downloaders", downloadSet.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadSet.stream().mapToLong(r -> r.getFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
 			
 			final var startDownload = System.currentTimeMillis();
 			executor = Executors.newFixedThreadPool(parameters.getThreadCount());
