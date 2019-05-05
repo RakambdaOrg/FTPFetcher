@@ -90,6 +90,6 @@ class Configuration extends SQLiteManager{
 		final var placeHolders = IntStream.range(0, paths.size()).mapToObj(o -> "(?,?)").collect(Collectors.joining(","));
 		final var values = paths.stream().map(path -> path.toString().replace("\\", "/")).flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString())).stream()).toArray(SQLValue[]::new);
 		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES " + placeHolders + ";", new PreparedStatementFiller(values)).waitSafely();
-		LOGGER.info("Set downloaded status for {} items", paths.size());
+		LOGGER.debug("Set downloaded status for {} items", paths.size());
 	}
 }

@@ -30,11 +30,13 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	private final Configuration config;
 	private final ConcurrentLinkedQueue<DownloadElement> downloadSet;
 	private final JSch jsch;
+	private final ProgressBarHandler progressBar;
 	
-	public FTPFetcher(final JSch jsch, final Configuration config, final ConcurrentLinkedQueue<DownloadElement> downloadSet){
+	public FTPFetcher(final JSch jsch, final Configuration config, final ConcurrentLinkedQueue<DownloadElement> downloadSet, ProgressBarHandler progressBar){
 		this.jsch = jsch;
 		this.config = config;
 		this.downloadSet = downloadSet;
+		this.progressBar = progressBar;
 	}
 	
 	@Override
@@ -50,7 +52,8 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			results.add(result);
 			var downloaded = element.getFileOut().exists();
 			
-			LOGGER.info("Downloading file {}{}", element.getFolder(), element.getFile().getFilename());
+			LOGGER.debug("Downloading file {}{}", element.getFolder(), element.getFile().getFilename());
+			progressBar.setExtraMessage(element.getFile().getFilename());
 			
 			if(!downloaded){
 				try(final var fos = new FileOutputStream(element.getFileOut())){
@@ -75,6 +78,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			
 			if(downloaded){
 				toSetDownloaded.add(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")));
+				progressBar.step();
 			}
 			
 			if(toSetDownloaded.size() > 25){
@@ -84,7 +88,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
 			result.setDownloadTime(System.currentTimeMillis() - startDownload);
 			
-			LOGGER.info("Downloaded file in {}", Duration.ofMillis(result.getDownloadTime()));
+			LOGGER.debug("Downloaded file in {}", Duration.ofMillis(result.getDownloadTime()));
 		}
 		
 		connection.close();

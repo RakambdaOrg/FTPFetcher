@@ -6,7 +6,7 @@
 
     <groupId>fr.mrcraftcod</groupId>
     <artifactId>ftpfetcher</artifactId>
-    <version>4.5</version>
+    <version>4.6</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -179,6 +179,11 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j18-impl</artifactId>
             <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.tongfei</groupId>
+            <artifactId>progressbar</artifactId>
+            <version>0.7.3</version>
         </dependency>
     </dependencies>
 </project>
