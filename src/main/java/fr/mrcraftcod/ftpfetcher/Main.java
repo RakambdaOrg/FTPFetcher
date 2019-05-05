@@ -7,6 +7,7 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
+import me.tongfei.progressbar.ProgressBar;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,24 +110,28 @@ public class Main{
 			final var startDownload = System.currentTimeMillis();
 			executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 			List<Future<List<DownloadResult>>> futures = new ArrayList<>();
+			List<DownloadResult> results;
 			
-			try{
-				futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet)).map(executor::submit).collect(Collectors.toList());
-			}
-			catch(final Exception e){
-				LOGGER.error("Error building fetchers", e);
-			}
-			
-			executor.shutdown();
-			final var results = futures.parallelStream().map(f -> {
+			try(final var progressBar = new ProgressBar("", downloadSet.size())){
+				final var progressBarHandler = new ProgressBarHandler(progressBar);
 				try{
-					return f.get();
+					futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet, progressBarHandler)).map(executor::submit).collect(Collectors.toList());
 				}
-				catch(InterruptedException | ExecutionException e){
-					LOGGER.error("Error waiting for fetcher", e);
+				catch(final Exception e){
+					LOGGER.error("Error building fetchers", e);
 				}
-				return null;
-			}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
+				
+				executor.shutdown();
+				results = futures.parallelStream().map(f -> {
+					try{
+						return f.get();
+					}
+					catch(InterruptedException | ExecutionException e){
+						LOGGER.error("Error waiting for fetcher", e);
+					}
+					return null;
+				}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
+			}
 			
 			final var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 			

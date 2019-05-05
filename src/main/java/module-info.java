@@ -15,4 +15,5 @@ open module FTPFetcher {
 	requires org.apache.commons.io;
 	requires org.apache.logging.log4j;
 	requires org.apache.logging.log4j.core;
+	requires progressbar;
 }
