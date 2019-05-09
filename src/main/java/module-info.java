@@ -13,7 +13,6 @@ open module FTPFetcher {
 	requires jcommander;
 	requires org.json;
 	requires org.apache.commons.io;
-	requires org.apache.logging.log4j;
-	requires org.apache.logging.log4j.core;
+	requires ch.qos.logback.classic;
 	requires progressbar;
 }
