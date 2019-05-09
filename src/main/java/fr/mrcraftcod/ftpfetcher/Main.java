@@ -105,37 +105,39 @@ public class Main{
 			}
 			LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 			
-			LOGGER.info("Starting to download {} ({}) with {} downloaders", downloadSet.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadSet.stream().mapToLong(r -> r.getFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
-			
-			final var startDownload = System.currentTimeMillis();
-			executor = Executors.newFixedThreadPool(parameters.getThreadCount());
-			List<Future<List<DownloadResult>>> futures = new ArrayList<>();
-			List<DownloadResult> results;
-			
-			try(final var progressBar = new ProgressBar("", downloadSet.size())){
-				final var progressBarHandler = new ProgressBarHandler(progressBar);
-				try{
-					futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet, progressBarHandler)).map(executor::submit).collect(Collectors.toList());
-				}
-				catch(final Exception e){
-					LOGGER.error("Error building fetchers", e);
+			if(!downloadSet.isEmpty()){
+				LOGGER.info("Starting to download {} ({}) with {} downloaders", downloadSet.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadSet.stream().mapToLong(r -> r.getFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
+				
+				final var startDownload = System.currentTimeMillis();
+				executor = Executors.newFixedThreadPool(parameters.getThreadCount());
+				List<Future<List<DownloadResult>>> futures = new ArrayList<>();
+				List<DownloadResult> results;
+				
+				try(final var progressBar = new ProgressBar("", downloadSet.size())){
+					final var progressBarHandler = new ProgressBarHandler(progressBar);
+					try{
+						futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet, progressBarHandler)).map(executor::submit).collect(Collectors.toList());
+					}
+					catch(final Exception e){
+						LOGGER.error("Error building fetchers", e);
+					}
+					
+					executor.shutdown();
+					results = futures.parallelStream().map(f -> {
+						try{
+							return f.get();
+						}
+						catch(InterruptedException | ExecutionException e){
+							LOGGER.error("Error waiting for fetcher", e);
+						}
+						return null;
+					}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
 				}
 				
-				executor.shutdown();
-				results = futures.parallelStream().map(f -> {
-					try{
-						return f.get();
-					}
-					catch(InterruptedException | ExecutionException e){
-						LOGGER.error("Error waiting for fetcher", e);
-					}
-					return null;
-				}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
+				final var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
+				
+				LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 			}
-			
-			final var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
-			
-			LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 		}
 		catch(final Exception e){
 			LOGGER.error("Uncaught exception", e);
