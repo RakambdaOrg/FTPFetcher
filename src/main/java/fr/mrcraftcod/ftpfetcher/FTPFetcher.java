@@ -58,10 +58,15 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			if(!downloaded){
 				try(final var fos = new FileOutputStream(element.getFileOut())){
 					connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos);
+					fos.flush();
 					
 					setAttributes(Paths.get(element.getFileOut().toURI()), FileTime.fromMillis(element.getFile().getAttrs().getATime() * 1000L));
-					
-					downloaded = true;
+					if(element.getFile().getAttrs().getSize() == element.getFileOut().length()){
+						downloaded = true;
+					}
+					else{
+						LOGGER.warn("Sizes mismatch expected:{} actual:{} difference: {}", element.getFile().getAttrs().getSize(), element.getFileOut().length(), element.getFileOut().length() - element.getFile().getAttrs().getSize());
+					}
 				}
 				catch(final IOException e){
 					LOGGER.warn("IO - Error downloading file", e);
