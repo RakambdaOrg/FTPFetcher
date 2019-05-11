@@ -7,14 +7,14 @@
     <name>FTPFetcher</name>
     <groupId>fr.mrcraftcod</groupId>
     <artifactId>ftpfetcher</artifactId>
-    <version>4.8</version>
+    <version>4.9</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>12</java.version>
         <main.class>fr.mrcraftcod.ftpfetcher.Main</main.class>
         <final.name>FTPFetcher</final.name>
-        <mrcraftcod.utils>12.0.2</mrcraftcod.utils>
+        <mrcraftcod.utils>12.0.5</mrcraftcod.utils>
     </properties>
     <packaging>jar</packaging>
 
@@ -65,7 +65,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
                             <shadedClassifierName>jar-with-dependencies</shadedClassifierName>
                             <finalName>${final.name}</finalName>
                             <transformers>
