@@ -7,14 +7,14 @@
     <name>FTPFetcher</name>
     <groupId>fr.mrcraftcod</groupId>
     <artifactId>ftpfetcher</artifactId>
-    <version>4.10</version>
+    <version>4.11</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>12</java.version>
         <main.class>fr.mrcraftcod.ftpfetcher.Main</main.class>
         <final.name>FTPFetcher</final.name>
-        <mrcraftcod.utils>12.0.5</mrcraftcod.utils>
+        <mrcraftcod.utils>12.0.9</mrcraftcod.utils>
     </properties>
     <packaging>jar</packaging>
 
@@ -80,7 +80,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -93,7 +93,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
