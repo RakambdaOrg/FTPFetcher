@@ -2,7 +2,10 @@ package fr.mrcraftcod.ftpfetcher;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.converters.FileConverter;
+import com.beust.jcommander.converters.PathConverter;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com) on 01/09/2018.
@@ -27,8 +30,8 @@ public class CLIParameters{
 	@Parameter(names = {
 			"-db",
 			"--database"
-	}, description = "The path to the database to store downloads to", converter = FileConverter.class)
-	private File databaseFile = new File(".", "FTPFetcher.db");
+	}, description = "The path to the database to store downloads to", converter = PathConverter.class)
+	private Path databaseFile = Paths.get("FTPFetcher.db");
 	
 	@Parameter(names = {
 			"-h",
@@ -39,8 +42,8 @@ public class CLIParameters{
 	public CLIParameters(){
 	}
 	
-	public File getDatabaseFile(){
-		return databaseFile.getAbsoluteFile();
+	public Path getDatabasePath(){
+		return databaseFile;
 	}
 	
 	public int getThreadCount(){

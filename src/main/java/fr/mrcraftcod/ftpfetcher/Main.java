@@ -41,7 +41,7 @@ public class Main{
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ssZ");
 	private static ExecutorService executor;
 	
-	public static void main(final String[] args) throws IOException, InterruptedException, ClassNotFoundException{
+	public static void main(final String[] args) throws IOException{
 		final var parameters = new CLIParameters();
 		try{
 			JCommander.newBuilder().addObject(parameters).build().parse(args);
@@ -51,38 +51,27 @@ public class Main{
 			e.usage();
 			return;
 		}
-		
-		final var lockFile = Paths.get(parameters.getDatabaseFile().toURI()).resolveSibling(parameters.getDatabaseFile().getName() + ".lock").normalize().toAbsolutePath();
+		final var lockFile = parameters.getDatabasePath().resolveSibling(parameters.getDatabasePath().getFileName() + ".lock").normalize().toAbsolutePath();
 		if(lockFile.toFile().exists()){
 			LOGGER.error("Program is already running, lock file {} is present", lockFile.toFile());
 			System.exit(1);
 		}
 		touch(lockFile.toFile());
 		lockFile.toFile().deleteOnExit();
-		
-		final var config = new Configuration(parameters.getDatabaseFile());
-		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			if(executor != null){
 				executor.shutdownNow();
 			}
-			config.close();
 		}));
-		
-		try{
+		try(final var config = new Configuration(parameters.getDatabasePath())){
 			Settings.getInstance(parameters.getProperties().getAbsolutePath());
-			
 			JSch.setConfig("StrictHostKeyChecking", "no");
-			
 			final var jsch = new JSch();
 			final var knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
 			jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
-			
 			LOGGER.info("Removed {} useless entries", config.removeUseless());
-			
 			final var startFetch = System.currentTimeMillis();
 			final var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
-			
 			for(final var folderFetchObj : Settings.getArray("folders")){
 				try{
 					final var folderFetch = (JSONObject) folderFetchObj;
@@ -104,15 +93,12 @@ public class Main{
 				}
 			}
 			LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
-			
 			if(!downloadSet.isEmpty()){
 				LOGGER.info("Starting to download {} ({}) with {} downloaders", downloadSet.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadSet.stream().mapToLong(r -> r.getFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
-				
 				final var startDownload = System.currentTimeMillis();
 				executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 				List<Future<List<DownloadResult>>> futures = new ArrayList<>();
-				List<DownloadResult> results;
-				
+				final List<DownloadResult> results;
 				try(final var progressBar = new ProgressBar("", downloadSet.size())){
 					final var progressBarHandler = new ProgressBarHandler(progressBar);
 					try{
@@ -121,7 +107,6 @@ public class Main{
 					catch(final Exception e){
 						LOGGER.error("Error building fetchers", e);
 					}
-					
 					executor.shutdown();
 					results = futures.parallelStream().map(f -> {
 						try{
@@ -133,9 +118,7 @@ public class Main{
 						return null;
 					}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
 				}
-				
 				final var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
-				
 				LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 			}
 		}
@@ -172,7 +155,6 @@ public class Main{
 			}
 			return null;
 		}).filter(Objects::nonNull).collect(Collectors.toList());
-		
 		LOGGER.info("Verified folder {}, {} elements to download", folder, toDL.size());
 		return toDL;
 	}
@@ -203,7 +185,6 @@ public class Main{
 			return null;
 		}
 		FileUtils.createDirectories(fileOut);
-		
 		return new DownloadElement(folder, file, fileOut);
 	}
 }

@@ -6,7 +6,6 @@ import fr.mrcraftcod.utils.config.SQLValue;
 import fr.mrcraftcod.utils.config.SQLiteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -27,8 +26,8 @@ import java.util.stream.IntStream;
 class Configuration extends SQLiteManager{
 	private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
 	
-	Configuration(final File dbFile) throws ClassNotFoundException, InterruptedException{
-		super(dbFile);
+	Configuration(final Path dbFile) throws ClassNotFoundException, InterruptedException{
+		super(dbFile.toFile());
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Downloaded(Filee VARCHAR(512) NOT NULL, DateDownload DATETIME,PRIMARY KEY(Filee));").waitSafely();
 	}
 	
