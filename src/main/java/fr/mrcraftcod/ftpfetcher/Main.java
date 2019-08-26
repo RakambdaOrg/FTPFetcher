@@ -63,7 +63,7 @@ public class Main{
 				executor.shutdownNow();
 			}
 		}));
-		try(final var config = new Configuration(parameters.getDatabasePath())){
+		try(final var config = new Configuration(parameters.getDatabasePath().toAbsolutePath())){
 			Settings.getInstance(parameters.getProperties().getAbsolutePath());
 			JSch.setConfig("StrictHostKeyChecking", "no");
 			final var jsch = new JSch();
