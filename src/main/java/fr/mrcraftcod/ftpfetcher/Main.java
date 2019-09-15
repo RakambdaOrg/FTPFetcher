@@ -76,7 +76,7 @@ public class Main{
 				try{
 					final var folderFetch = (JSONObject) folderFetchObj;
 					final var connection = new FTPConnection(jsch);
-					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.getBoolean("recursive"), Pattern.compile(folderFetch.optString("fileFilter", ".*"))));
+					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.optBoolean("recursive", false), Pattern.compile(folderFetch.optString("fileFilter", ".*"))));
 					connection.close();
 				}
 				catch(final JSchException | IOException | SftpException e){
