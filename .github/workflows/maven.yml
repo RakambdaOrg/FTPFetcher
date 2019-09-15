@@ -12,7 +12,7 @@ jobs:
       with:
         java-version: 12
     - name: Build with Maven
-      run: mvn -s .m2/settings.xml --batch-mode package --file pom.xml
+      run: echo "${{ github.ref }}" && mvn -s .m2/settings.xml --batch-mode package --file pom.xml
   deploy:
     needs: build
     runs-on: ubuntu-latest
