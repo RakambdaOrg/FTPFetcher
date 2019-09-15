@@ -20,9 +20,6 @@ jobs:
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
-      - name: Deploy on GitHub artifactory
-        run: mvn --batch-mode deploy -Dregistry=https://maven.pkg.github.com/RakSrinaNa -Dtoken="${GITHUB_TOKEN}"
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy on Dropbox
         run: |
