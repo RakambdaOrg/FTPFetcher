@@ -1,4 +1,4 @@
-name: Java CI
+name: Deployment
 
 on:
   push:
@@ -15,14 +15,12 @@ jobs:
         with:
           java-version: 12
       - name: Deploy on artifactory
-        if: github.ref == 'master'
         run: mvn -s .m2/settings.xml --batch-mode deploy
         env:
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
       - name: Deploy on Dropbox
-        if: github.ref == 'master'
         run: |
           curl "${UPLOADER_FETCH_URL}" -o "${UPLOADER}" &&
           echo "OAUTH_ACCESS_TOKEN=${DROPBOX_DEPLOY_TOKEN}" > "${UPLOADER_CONFIG}" &&
