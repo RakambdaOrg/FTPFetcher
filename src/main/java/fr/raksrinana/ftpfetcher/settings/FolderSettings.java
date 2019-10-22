@@ -10,10 +10,12 @@ import java.nio.file.Path;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FolderSettings{
+	@SuppressWarnings("FieldMayBeFinal")
 	@JsonProperty("recursive")
-	private final boolean recursive = false;
+	private boolean recursive = false;
+	@SuppressWarnings("FieldMayBeFinal")
 	@JsonProperty("fileFilter")
-	private final String fileFilter = ".*";
+	private String fileFilter = ".*";
 	@JsonProperty("localFolder")
 	@JsonDeserialize(using = NioPathDeserializer.class)
 	private Path localFolder;
