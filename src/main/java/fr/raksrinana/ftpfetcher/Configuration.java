@@ -1,4 +1,4 @@
-package fr.mrcraftcod.ftpfetcher;
+package fr.raksrinana.ftpfetcher;
 
 import com.jcraft.jsch.ChannelSftp;
 import fr.mrcraftcod.utils.config.PreparedStatementFiller;

@@ -1,8 +1,9 @@
-package fr.mrcraftcod.ftpfetcher;
+package fr.raksrinana.ftpfetcher;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
+import fr.raksrinana.ftpfetcher.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.FileOutputStream;
@@ -27,13 +28,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class FTPFetcher implements Callable<List<DownloadResult>>{
 	private static final Logger LOGGER = LoggerFactory.getLogger(FTPFetcher.class);
+	private final Settings settings;
 	private final Configuration config;
 	private final ConcurrentLinkedQueue<DownloadElement> downloadSet;
 	private final JSch jsch;
 	private final ProgressBarHandler progressBar;
 	
-	public FTPFetcher(final JSch jsch, final Configuration config, final ConcurrentLinkedQueue<DownloadElement> downloadSet, ProgressBarHandler progressBar){
+	public FTPFetcher(final JSch jsch, final Settings settings, final Configuration config, final ConcurrentLinkedQueue<DownloadElement> downloadSet, final ProgressBarHandler progressBar){
 		this.jsch = jsch;
+		this.settings = settings;
 		this.config = config;
 		this.downloadSet = downloadSet;
 		this.progressBar = progressBar;
@@ -41,10 +44,9 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	
 	@Override
 	public List<DownloadResult> call() throws IOException, JSchException{
-		final var connection = new FTPConnection(jsch);
+		final var connection = new FTPConnection(jsch, settings);
 		final var results = new LinkedList<DownloadResult>();
 		final var toSetDownloaded = new ArrayList<Path>();
-		
 		DownloadElement element;
 		while((element = downloadSet.poll()) != null){
 			final var startDownload = System.currentTimeMillis();

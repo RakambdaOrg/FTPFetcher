@@ -1,9 +1,7 @@
-package fr.mrcraftcod.ftpfetcher;
+package fr.raksrinana.ftpfetcher;
 
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.converters.FileConverter;
 import com.beust.jcommander.converters.PathConverter;
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -20,12 +18,11 @@ public class CLIParameters{
 			"--threads"
 	}, description = "The number of threads to use (must be >= 1)")
 	private int threadCount = 1;
-	
 	@Parameter(names = {
 			"-p",
 			"--properties"
-	}, description = "The settings properties to use", converter = FileConverter.class, required = true)
-	private File properties;
+	}, description = "The settings properties to use", converter = PathConverter.class, required = true)
+	private Path properties;
 	
 	@Parameter(names = {
 			"-db",
@@ -50,7 +47,7 @@ public class CLIParameters{
 		return this.threadCount;
 	}
 	
-	public File getProperties(){
-		return this.properties.getAbsoluteFile();
+	public Path getProperties(){
+		return this.properties;
 	}
 }

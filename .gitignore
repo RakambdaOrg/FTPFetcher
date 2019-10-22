@@ -1,4 +1,7 @@
+.gradle/
+.idea/
+build/
+target/
+
 FTPFetcher.iml
-.idea
-target
 settings.properties

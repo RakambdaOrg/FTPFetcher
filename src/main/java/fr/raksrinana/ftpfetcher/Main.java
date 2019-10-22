@@ -1,4 +1,4 @@
-package fr.mrcraftcod.ftpfetcher;
+package fr.raksrinana.ftpfetcher;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -7,15 +7,14 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.mrcraftcod.utils.base.FileUtils;
+import fr.raksrinana.ftpfetcher.settings.Settings;
 import me.tongfei.progressbar.ProgressBar;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -63,69 +62,67 @@ public class Main{
 				executor.shutdownNow();
 			}
 		}));
-		try(final var config = new Configuration(parameters.getDatabasePath().toAbsolutePath())){
-			Settings.getInstance(parameters.getProperties().getAbsolutePath());
-			JSch.setConfig("StrictHostKeyChecking", "no");
-			final var jsch = new JSch();
-			final var knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
-			jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
-			LOGGER.info("Removed {} useless entries", config.removeUseless());
-			final var startFetch = System.currentTimeMillis();
-			final var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
-			for(final var folderFetchObj : Settings.getArray("folders")){
-				try{
-					final var folderFetch = (JSONObject) folderFetchObj;
-					final var connection = new FTPConnection(jsch);
-					downloadSet.addAll(fetchFolder(config, connection, folderFetch.getString("ftpFolder"), Paths.get(new File(".").toURI()).resolve(folderFetch.getString("localFolder")), folderFetch.optBoolean("recursive", false), Pattern.compile(folderFetch.optString("fileFilter", ".*"))));
-					connection.close();
-				}
-				catch(final JSchException | IOException | SftpException e){
-					final var folder = ((JSONObject) folderFetchObj).getString("ftpFolder");
-					if(e.getMessage().equals("No such file")){
-						LOGGER.warn("Folder {} doesn't exist", folder);
-					}
-					else{
-						LOGGER.error("Error fetching folder {}", folder, e);
-					}
-				}
-				catch(final Exception e){
-					LOGGER.error("Error fetching folder {}", folderFetchObj, e);
-				}
-			}
-			LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
-			if(!downloadSet.isEmpty()){
-				LOGGER.info("Starting to download {} ({}) with {} downloaders", downloadSet.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadSet.stream().mapToLong(r -> r.getFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
-				final var startDownload = System.currentTimeMillis();
-				executor = Executors.newFixedThreadPool(parameters.getThreadCount());
-				List<Future<List<DownloadResult>>> futures = new ArrayList<>();
-				final List<DownloadResult> results;
-				try(final var progressBar = new ProgressBar("", downloadSet.size())){
-					final var progressBarHandler = new ProgressBarHandler(progressBar);
+		Settings.loadSettings(parameters.getProperties()).ifPresentOrElse(settings -> {
+			try(final var config = new Configuration(parameters.getDatabasePath().toAbsolutePath())){
+				JSch.setConfig("StrictHostKeyChecking", "no");
+				final var jsch = new JSch();
+				final var knownHostsFilename = FileUtils.getHomeFolder(".ssh/known_hosts");
+				jsch.setKnownHosts(knownHostsFilename.getAbsolutePath());
+				LOGGER.info("Removed {} useless entries", config.removeUseless());
+				final var startFetch = System.currentTimeMillis();
+				final var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
+				for(final var folderFetchObj : settings.getFolders()){
 					try{
-						futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, config, downloadSet, progressBarHandler)).map(executor::submit).collect(Collectors.toList());
+						final var connection = new FTPConnection(jsch, settings);
+						downloadSet.addAll(fetchFolder(config, connection, folderFetchObj.getFtpFolder(), folderFetchObj.getLocalFolder(), folderFetchObj.isRecursive(), Pattern.compile(folderFetchObj.getFileFilter())));
+						connection.close();
+					}
+					catch(final JSchException | IOException | SftpException e){
+						if(e.getMessage().equals("No such file")){
+							LOGGER.warn("Folder {} doesn't exist", folderFetchObj.getFtpFolder());
+						}
+						else{
+							LOGGER.error("Error fetching folder {}", folderFetchObj.getFtpFolder(), e);
+						}
 					}
 					catch(final Exception e){
-						LOGGER.error("Error building fetchers", e);
+						LOGGER.error("Error fetching folder {}", folderFetchObj, e);
 					}
-					executor.shutdown();
-					results = futures.parallelStream().map(f -> {
-						try{
-							return f.get();
-						}
-						catch(InterruptedException | ExecutionException e){
-							LOGGER.error("Error waiting for fetcher", e);
-						}
-						return null;
-					}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
 				}
-				final var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
-				LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
+				LOGGER.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
+				if(!downloadSet.isEmpty()){
+					LOGGER.info("Starting to download {} ({}) with {} downloaders", downloadSet.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadSet.stream().mapToLong(r -> r.getFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
+					final var startDownload = System.currentTimeMillis();
+					executor = Executors.newFixedThreadPool(parameters.getThreadCount());
+					List<Future<List<DownloadResult>>> futures = new ArrayList<>();
+					final List<DownloadResult> results;
+					try(final var progressBar = new ProgressBar("", downloadSet.size())){
+						final var progressBarHandler = new ProgressBarHandler(progressBar);
+						try{
+							futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, settings, config, downloadSet, progressBarHandler)).map(executor::submit).collect(Collectors.toList());
+						}
+						catch(final Exception e){
+							LOGGER.error("Error building fetchers", e);
+						}
+						executor.shutdown();
+						results = futures.parallelStream().map(f -> {
+							try{
+								return f.get();
+							}
+							catch(InterruptedException | ExecutionException e){
+								LOGGER.error("Error waiting for fetcher", e);
+							}
+							return null;
+						}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
+					}
+					final var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
+					LOGGER.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
+				}
 			}
-		}
-		catch(final Exception e){
-			LOGGER.error("Uncaught exception", e);
-		}
-		System.exit(0);
+			catch(final Exception e){
+				LOGGER.error("Uncaught exception", e);
+			}
+		}, () -> LOGGER.error("Failed to load settings in {}", parameters.getProperties()));
 	}
 	
 	private static Collection<? extends DownloadElement> fetchFolder(final Configuration config, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter) throws SftpException, InterruptedException{

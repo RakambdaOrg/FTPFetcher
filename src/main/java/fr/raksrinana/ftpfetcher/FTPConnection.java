@@ -1,9 +1,10 @@
-package fr.mrcraftcod.ftpfetcher;
+package fr.raksrinana.ftpfetcher;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import fr.raksrinana.ftpfetcher.settings.Settings;
 import java.io.IOException;
 
 /**
@@ -12,28 +13,24 @@ import java.io.IOException;
  * @author Thomas Couchoud
  * @since 2018-07-04
  */
-class FTPConnection
-{
+class FTPConnection{
 	private Session session;
 	private ChannelSftp sftpChannel;
 	private final JSch jsch;
+	private final Settings settings;
 	
-	FTPConnection(final JSch jsch) throws JSchException, IOException
-	{
+	FTPConnection(final JSch jsch, final Settings settings) throws JSchException, IOException{
 		this.jsch = jsch;
+		this.settings = settings;
 		connect();
 	}
 	
-	private void connect() throws JSchException, IOException
-	{
-		session = jsch.getSession(Settings.getString("ftpUser"), Settings.getString("ftpHost"));
-		session.setPassword(Settings.getString("ftpPass"));
-		
+	private void connect() throws JSchException, IOException{
+		session = jsch.getSession(settings.getFtpUser(), settings.getFtpHost());
+		session.setPassword(settings.getFtpPass());
 		session.connect();
-		
 		final var channel = session.openChannel("sftp");
 		channel.connect();
-		
 		session.setServerAliveInterval(20000);
 		sftpChannel = (ChannelSftp) channel;
 	}

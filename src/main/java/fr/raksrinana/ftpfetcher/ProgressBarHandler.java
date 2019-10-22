@@ -1,4 +1,4 @@
-package fr.mrcraftcod.ftpfetcher;
+package fr.raksrinana.ftpfetcher;
 
 import me.tongfei.progressbar.ProgressBar;
 
@@ -12,7 +12,7 @@ public class ProgressBarHandler{
 	private final ProgressBar progressBar;
 	private final Object stepLock;
 	
-	public ProgressBarHandler(ProgressBar progressBar){
+	public ProgressBarHandler(final ProgressBar progressBar){
 		this.progressBar = progressBar;
 		this.stepLock = new Object();
 	}
@@ -23,7 +23,7 @@ public class ProgressBarHandler{
 		}
 	}
 	
-	public void setExtraMessage(String s){
+	public void setExtraMessage(final String s){
 		this.progressBar.setExtraMessage(s);
 	}
 }

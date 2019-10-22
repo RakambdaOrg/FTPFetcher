@@ -1,0 +1,79 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'java'
+    id 'application'
+}
+
+group = 'fr.raksrinana'
+description = 'FTPFetcher'
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_12
+
+ext.moduleName = project.moduleName
+mainClassName = project.mainClass
+
+dependencies {
+    implementation("com.jcraft:jsch:${project.jsch_version}") {
+        exclude module: 'commons-io'
+        exclude module: 'commons-lang3'
+    }
+
+    implementation("org.slf4j:slf4j-api:${project.slf4j_version}")
+    implementation("ch.qos.logback:logback-classic:${project.logback_version}")
+    implementation("fr.mrcraftcod:utils.base:${project.raksrinana_utils_version}")
+    implementation("fr.mrcraftcod:utils.javafx:${project.raksrinana_utils_version}")
+    implementation("fr.mrcraftcod:utils.config:${project.raksrinana_utils_version}")
+    implementation("com.google.code.findbugs:jsr305:${project.jsr305_version}")
+
+    implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
+
+    implementation("commons-io:commons-io:${project.commons_io_version}")
+    implementation("me.tongfei:progressbar:${project.progressbar_version}")
+    implementation("com.beust:jcommander:${project.jcommander_version}")
+}
+
+repositories {
+    maven {
+        url = 'https://repo.maven.apache.org/maven2'
+    }
+    maven {
+        url = 'https://jcenter.bintray.com'
+    }
+    maven {
+        url = 'https://maven.mrcraftcod.fr'
+    }
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+processResources {
+    from 'src/main/resources'
+    filter(ReplaceTokens, tokens: [project_version: project.version, project_name: project.name])
+}
+
+compileJava {
+    inputs.property("moduleName", moduleName)
+    doFirst {
+        options.compilerArgs = [
+                '--module-path', classpath.asPath,
+        ]
+        classpath = files()
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': project.mainClass
+    }
+}
+
+shadowJar {
+    baseName = project.name
+    classifier = 'shaded'
+    version = null
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

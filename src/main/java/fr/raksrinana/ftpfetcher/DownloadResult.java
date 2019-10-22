@@ -1,4 +1,4 @@
-package fr.mrcraftcod.ftpfetcher;
+package fr.raksrinana.ftpfetcher;
 
 /**
  * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com)
