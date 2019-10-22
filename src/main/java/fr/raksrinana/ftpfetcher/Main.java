@@ -140,9 +140,9 @@ public class Main{
 		}).flatMap(f -> {
 			try{
 				if(recursive && f.getAttrs().isDir()){
-					return fetchFolder(config, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), recursive, fileFilter).stream();
+					return fetchFolder(config, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter).stream();
 				}
-				if(fileFilter.matcher(f.getFilename()).matches()){
+				if(!f.getAttrs().isDir() && fileFilter.matcher(f.getFilename()).matches()){
 					return Stream.of(downloadFile(folder, f, outPath.toFile()));
 				}
 				return Stream.empty();
