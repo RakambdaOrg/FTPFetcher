@@ -4,9 +4,7 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import fr.raksrinana.ftpfetcher.settings.Settings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.FileOutputStream;
+import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,15 +17,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
-/**
- * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com) on 09/12/2017.
- *
- * @author Thomas Couchoud
- * @since 2017-12-09
- */
+@Slf4j
 public class FTPFetcher implements Callable<List<DownloadResult>>{
-	private static final Logger LOGGER = LoggerFactory.getLogger(FTPFetcher.class);
 	private final Settings settings;
 	private final Configuration config;
 	private final ConcurrentLinkedQueue<DownloadElement> downloadSet;
@@ -52,52 +46,48 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 			final var startDownload = System.currentTimeMillis();
 			final var result = new DownloadResult(element, false);
 			results.add(result);
-			var downloaded = element.getFileOut().exists();
-			
-			LOGGER.debug("Downloading file {}{}", element.getFolder(), element.getFile().getFilename());
+			final var fileOut = element.getFileOut().toFile();
+			var downloaded = fileOut.exists();
+			log.debug("Downloading file {}{}", element.getFolder(), element.getFile().getFilename());
 			progressBar.setExtraMessage(element.getFile().getFilename());
-			
 			if(!downloaded){
-				try(final var fos = new FileOutputStream(element.getFileOut())){
+				try(final var fos = Files.newOutputStream(element.getFileOut())){
 					connection.getClient().get(element.getFolder() + element.getFile().getFilename(), fos);
 					fos.flush();
-					
-					setAttributes(Paths.get(element.getFileOut().toURI()), FileTime.fromMillis(element.getFile().getAttrs().getATime() * 1000L));
-					if(element.getFile().getAttrs().getSize() == element.getFileOut().length()){
+					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getFile().getAttrs().getATime() * 1000L));
+					final var fileLength = fileOut.length();
+					final var expectedFileLength = element.getFile().getAttrs().getSize();
+					if(expectedFileLength == fileLength){
 						downloaded = true;
 					}
 					else{
-						LOGGER.warn("Sizes mismatch expected:{} actual:{} difference: {}", element.getFile().getAttrs().getSize(), element.getFileOut().length(), element.getFileOut().length() - element.getFile().getAttrs().getSize());
+						log.warn("Sizes mismatch expected:{} actual:{} difference: {}", expectedFileLength, fileLength, fileLength - expectedFileLength);
 					}
 				}
 				catch(final IOException e){
-					LOGGER.warn("IO - Error downloading file", e);
-					element.getFileOut().deleteOnExit();
+					log.warn("IO - Error downloading file", e);
+					fileOut.deleteOnExit();
 				}
 				catch(final SftpException e){
-					LOGGER.warn("SFTP - Error downloading file", e);
-					element.getFileOut().deleteOnExit();
+					log.warn("SFTP - Error downloading file", e);
+					fileOut.deleteOnExit();
 					if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed")){
 						connection.reopen();
 					}
 				}
 			}
-			
 			if(downloaded){
 				toSetDownloaded.add(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")));
 				progressBar.step();
 			}
-			
 			if(toSetDownloaded.size() > 25){
 				writeDownloaded(toSetDownloaded);
 			}
-			
-			result.setDownloaded(downloaded && element.getFileOut().length() != 0 && element.getFileOut().length() == element.getFile().getAttrs().getSize());
+			final var fileLength = fileOut.length();
+			result.setDownloaded(downloaded && fileLength != 0 && fileLength == element.getFile().getAttrs().getSize());
 			result.setDownloadTime(System.currentTimeMillis() - startDownload);
-			
-			LOGGER.debug("Downloaded file in {}", Duration.ofMillis(result.getDownloadTime()));
+			log.debug("Downloaded file in {}", Duration.ofMillis(result.getDownloadTime()));
 		}
-		
 		connection.close();
 		writeDownloaded(toSetDownloaded);
 		return results;
@@ -109,7 +99,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 				Files.setAttribute(path, attribute, fileTime);
 			}
 			catch(final Exception e){
-				LOGGER.warn("Error setting file attributes for {}", path, e);
+				log.warn("Error setting file attributes for {}", path, e);
 			}
 		}
 	}
@@ -121,8 +111,8 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 				toSetDownloaded.clear();
 			}
 		}
-		catch(final InterruptedException e){
-			LOGGER.error("Error setting downloaded status in DB", e);
+		catch(final InterruptedException | TimeoutException | ExecutionException e){
+			log.error("Error setting downloaded status in DB", e);
 		}
 	}
 }

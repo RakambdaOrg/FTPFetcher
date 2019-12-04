@@ -1,40 +1,19 @@
 package fr.raksrinana.ftpfetcher;
 
 import com.jcraft.jsch.ChannelSftp;
-import java.io.File;
+import lombok.Getter;
+import java.nio.file.Path;
 
-/**
- * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com)
- *
- * @author Thomas Couchoud
- * @since 2018-07-04
- */
-class DownloadElement
-{
+@Getter
+class DownloadElement{
 	private final String folder;
 	private final ChannelSftp.LsEntry file;
-	private final File fileOut;
+	private final Path fileOut;
 	
-	DownloadElement(final String folder, final ChannelSftp.LsEntry file, final File fileOut)
-	{
+	DownloadElement(final String folder, final ChannelSftp.LsEntry file, final Path fileOut){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.file = file;
 		this.fileOut = fileOut;
-	}
-	
-	String getFolder()
-	{
-		return folder;
-	}
-	
-	ChannelSftp.LsEntry getFile()
-	{
-		return file;
-	}
-	
-	File getFileOut()
-	{
-		return fileOut;
 	}
 	
 	@Override

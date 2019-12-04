@@ -4,23 +4,21 @@ import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.annotation.Nonnull;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com) on 24/01/2018.
- *
- * @author Thomas Couchoud
- * @since 2018-01-24
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
+@NoArgsConstructor
 public class Settings{
 	@JsonIgnore
 	private static final Logger LOGGER = LoggerFactory.getLogger(Settings.class);
@@ -35,10 +33,7 @@ public class Settings{
 	@JsonProperty("folders")
 	private List<FolderSettings> folders;
 	
-	public Settings(){
-	}
-	
-	@Nonnull
+	@NonNull
 	public static Optional<Settings> loadSettings(final Path path){
 		if(path.toFile().exists()){
 			try(final var fis = new FileInputStream(path.toFile())){
@@ -49,22 +44,6 @@ public class Settings{
 			}
 		}
 		return Optional.empty();
-	}
-	
-	public List<FolderSettings> getFolders(){
-		return folders;
-	}
-	
-	public String getFtpHost(){
-		return ftpHost;
-	}
-	
-	public String getFtpPass(){
-		return ftpPass;
-	}
-	
-	public String getFtpUser(){
-		return ftpUser;
 	}
 	
 	static{

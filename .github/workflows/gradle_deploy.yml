@@ -11,9 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Build with gradle
-        uses: MrRamych/gradle-actions/openjdk-12@3.0
+        uses: MrRamych/gradle-actions/openjdk-13@3.1
         with:
           args: build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy on Dropbox
         run: |
           curl "${UPLOADER_FETCH_URL}" -o "${UPLOADER}" &&

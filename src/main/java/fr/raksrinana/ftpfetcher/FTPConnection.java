@@ -7,25 +7,19 @@ import com.jcraft.jsch.Session;
 import fr.raksrinana.ftpfetcher.settings.Settings;
 import java.io.IOException;
 
-/**
- * Created by Thomas Couchoud (MrCraftCod - zerderr@gmail.com)
- *
- * @author Thomas Couchoud
- * @since 2018-07-04
- */
 class FTPConnection{
 	private Session session;
 	private ChannelSftp sftpChannel;
 	private final JSch jsch;
 	private final Settings settings;
 	
-	FTPConnection(final JSch jsch, final Settings settings) throws JSchException, IOException{
+	FTPConnection(final JSch jsch, final Settings settings) throws JSchException{
 		this.jsch = jsch;
 		this.settings = settings;
 		connect();
 	}
 	
-	private void connect() throws JSchException, IOException{
+	private void connect() throws JSchException{
 		session = jsch.getSession(settings.getFtpUser(), settings.getFtpHost());
 		session.setPassword(settings.getFtpPass());
 		session.connect();
