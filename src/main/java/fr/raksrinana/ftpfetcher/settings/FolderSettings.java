@@ -9,15 +9,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.nio.file.Path;
 
+@SuppressWarnings("FieldMayBeFinal")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @NoArgsConstructor
 public class FolderSettings{
 	@JsonProperty("recursive")
-	private final boolean recursive = false;
+	private boolean recursive = false;
 	@JsonProperty("fileFilter")
-	private final String fileFilter = ".*";
+	private String fileFilter = ".*";
 	@JsonProperty("localFolder")
 	@JsonDeserialize(using = NioPathDeserializer.class)
 	private Path localFolder;
