@@ -80,10 +80,10 @@ class Configuration extends SQLiteManager{
 		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES(?,?);", new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, path.toString().replace("\\", "/")), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString()))).get(30, TimeUnit.SECONDS);
 	}
 	
-	void setDownloaded(final Collection<Path> paths) throws InterruptedException, TimeoutException, ExecutionException{
+	void setDownloaded(final Collection<Path> paths){
 		final var placeHolders = IntStream.range(0, paths.size()).mapToObj(o -> "(?,?)").collect(Collectors.joining(","));
 		final var values = paths.stream().map(path -> path.toString().replace("\\", "/")).flatMap(path -> List.of(new SQLValue(SQLValue.Type.STRING, path), new SQLValue(SQLValue.Type.STRING, LocalDateTime.now().toString())).stream()).toArray(SQLValue[]::new);
-		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES " + placeHolders + ";", new PreparedStatementFiller(values)).get(30, TimeUnit.SECONDS);
+		sendPreparedUpdateRequest("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES " + placeHolders + ";", new PreparedStatementFiller(values));
 		LOGGER.debug("Set downloaded status for {} items", paths.size());
 	}
 }

@@ -17,8 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class FTPFetcher implements Callable<List<DownloadResult>>{
@@ -80,7 +78,7 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 				toSetDownloaded.add(Paths.get(element.getFolder()).resolve(element.getFile().getFilename().replace(":", ".")));
 				progressBar.step();
 			}
-			if(toSetDownloaded.size() > 25){
+			if(toSetDownloaded.size() > 50){
 				writeDownloaded(toSetDownloaded);
 			}
 			final var fileLength = fileOut.length();
@@ -105,14 +103,14 @@ public class FTPFetcher implements Callable<List<DownloadResult>>{
 	}
 	
 	private void writeDownloaded(final List<Path> toSetDownloaded){
-		try{
-			if(toSetDownloaded.size() > 0){
-				config.setDownloaded(toSetDownloaded);
-				toSetDownloaded.clear();
-			}
+		// try{
+		if(toSetDownloaded.size() > 0){
+			config.setDownloaded(toSetDownloaded);
+			toSetDownloaded.clear();
 		}
-		catch(final InterruptedException | TimeoutException | ExecutionException e){
-			log.error("Error setting downloaded status in DB", e);
-		}
+		// }
+		// catch(final InterruptedException | TimeoutException | ExecutionException e){
+		// 	log.error("Error setting downloaded status in DB", e);
+		// }
 	}
 }
