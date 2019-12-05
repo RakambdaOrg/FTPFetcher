@@ -14,7 +14,7 @@ public class CLIParameters{
 			"-t",
 			"--threads"
 	}, description = "The number of threads to use (must be >= 1)")
-	private final int threadCount = 1;
+	private int threadCount = 1;
 	@Parameter(names = {
 			"-p",
 			"--properties"
@@ -24,10 +24,10 @@ public class CLIParameters{
 			"-db",
 			"--database"
 	}, description = "The path to the database to store downloads to", converter = PathConverter.class)
-	private final Path databasePath = Paths.get("FTPFetcher.db");
+	private Path databasePath = Paths.get("FTPFetcher.db");
 	@Parameter(names = {
 			"-h",
 			"--help"
 	}, help = true)
-	private final boolean help = false;
+	private boolean help = false;
 }
