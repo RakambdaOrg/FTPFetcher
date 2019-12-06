@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher;
+package fr.raksrinana.ftpfetcher.cli;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.converters.PathConverter;
@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@SuppressWarnings("FieldMayBeFinal")
 @Getter
 @NoArgsConstructor
 public class CLIParameters{

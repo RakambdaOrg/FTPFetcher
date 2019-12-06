@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher.settings;
+package fr.raksrinana.ftpfetcher.cli;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher.settings;
+package fr.raksrinana.ftpfetcher.cli;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,8 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,9 +18,8 @@ import java.util.Optional;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @NoArgsConstructor
+@Slf4j
 public class Settings{
-	@JsonIgnore
-	private static final Logger LOGGER = LoggerFactory.getLogger(Settings.class);
 	@JsonIgnore
 	private static final ObjectReader objectReader;
 	@JsonProperty("ftpHost")
@@ -40,7 +38,7 @@ public class Settings{
 				return Optional.ofNullable(objectReader.readValue(fis));
 			}
 			catch(final IOException e){
-				LOGGER.error("Failed to read settings in {}", path, e);
+				log.error("Failed to read settings in {}", path, e);
 			}
 		}
 		return Optional.empty();

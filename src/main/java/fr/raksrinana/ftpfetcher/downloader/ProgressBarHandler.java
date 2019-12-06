@@ -1,13 +1,7 @@
-package fr.raksrinana.ftpfetcher;
+package fr.raksrinana.ftpfetcher.downloader;
 
 import me.tongfei.progressbar.ProgressBar;
 
-/**
- * Created by mrcraftcod (MrCraftCod - zerderr@gmail.com) on 2019-05-05.
- *
- * @author Thomas Couchoud
- * @since 2019-05-05
- */
 public class ProgressBarHandler{
 	private final ProgressBar progressBar;
 	private final Object stepLock;

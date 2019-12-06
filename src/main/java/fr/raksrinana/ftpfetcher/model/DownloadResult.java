@@ -1,17 +1,17 @@
-package fr.raksrinana.ftpfetcher;
+package fr.raksrinana.ftpfetcher.model;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-class DownloadResult{
+public class DownloadResult{
 	private final DownloadElement element;
 	@Setter
 	private boolean downloaded;
 	@Setter
 	private long downloadTime;
 	
-	DownloadResult(final DownloadElement element, final boolean downloaded){
+	public DownloadResult(final DownloadElement element, final boolean downloaded){
 		this.element = element;
 		this.downloaded = downloaded;
 		this.downloadTime = 0;
