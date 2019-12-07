@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,7 +82,7 @@ public class Database implements AutoCloseable{
 	public int setDownloaded(final DownloadElement element){
 		try(final var connection = datasource.getConnection(); final var statement = connection.prepareStatement("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES(?,?)")){
 			statement.setString(1, element.getRemotePath().replace("\\", "/"));
-			statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+			statement.setString(2, LocalDateTime.now().toString());
 			return statement.executeUpdate();
 		}
 		catch(final SQLException e){
@@ -93,10 +92,11 @@ public class Database implements AutoCloseable{
 	}
 	
 	public int setDownloaded(final Collection<DownloadElement> elements){
+		final var downloadDate = LocalDateTime.now().toString();
 		try(final var connection = datasource.getConnection(); final var statement = connection.prepareStatement("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES(?,?)")){
 			for(final var element : elements){
 				statement.setString(1, element.getRemotePath().replace("\\", "/"));
-				statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+				statement.setString(2, downloadDate);
 				statement.addBatch();
 			}
 			final var result = Arrays.stream(statement.executeBatch()).sum();
