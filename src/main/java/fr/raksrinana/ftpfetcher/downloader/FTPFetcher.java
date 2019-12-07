@@ -83,15 +83,33 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 					progressBar.step();
 				}
 				if(toMarkDownloaded.size() >= MARK_DOWNLOADED_THRESHOLD){
-					database.setDownloaded(toMarkDownloaded);
-					toMarkDownloaded.clear();
+					markDownloaded(toMarkDownloaded);
 				}
 				result.setDownloadTime(System.currentTimeMillis() - startDownload);
 				log.debug("Downloaded file in {}", Duration.ofMillis(result.getDownloadTime()));
 			}
 		}
-		database.setDownloaded(toMarkDownloaded);
+		while(!markDownloaded(toMarkDownloaded)){
+			try{
+				Thread.sleep(1000);
+			}
+			catch(final InterruptedException e){
+				log.error("Error sleeping", e);
+			}
+		}
 		return results;
+	}
+	
+	private boolean markDownloaded(final Collection<DownloadElement> elements){
+		if(!elements.isEmpty()){
+			final var updated = database.setDownloaded(elements);
+			if(updated == elements.size()){
+				elements.clear();
+				return true;
+			}
+			return false;
+		}
+		return true;
 	}
 	
 	private static void setAttributes(final Path path, final FileTime fileTime){
