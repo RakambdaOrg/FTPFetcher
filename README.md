@@ -21,6 +21,7 @@ This is a JSON file following this pattern:
 			"ftpFolder": "/distant/folder",
 			"recursive": true, // default: false
 			"fileFilter": ".*\\.(jpg|mp4|mov)$", // default: ".*"
+            "isFilenameDate": false, // default: true
 		}
 	]
 }

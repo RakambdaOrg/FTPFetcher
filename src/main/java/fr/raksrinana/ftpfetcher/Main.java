@@ -75,7 +75,7 @@ public class Main{
 				final var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
 				for(final var folderSettings : settings.getFolders()){
 					try(final var connection = new FTPConnection(jsch, settings)){
-						downloadSet.addAll(fetchFolder(database, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter())));
+						downloadSet.addAll(fetchFolder(database, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isFilenameDate()));
 					}
 					catch(final JSchException | SftpException e){
 						if(e.getMessage().equals("No such file")){
@@ -133,7 +133,7 @@ public class Main{
 		return database.removeUseless();
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter) throws SftpException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter, final boolean isFilenameDate) throws SftpException{
 		log.info("Fetching folder {}", folder);
 		final var array = connection.getSftpChannel().ls(folder).toArray();
 		log.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
@@ -148,10 +148,10 @@ public class Main{
 		}).flatMap(f -> {
 			try{
 				if(recursive && f.getAttrs().isDir()){
-					return fetchFolder(database, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter).stream();
+					return fetchFolder(database, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter, isFilenameDate).stream();
 				}
 				if(!f.getAttrs().isDir() && fileFilter.matcher(f.getFilename()).matches()){
-					return Stream.of(createDownload(folder, f, outPath));
+					return Stream.of(createDownload(folder, f, outPath, isFilenameDate));
 				}
 				return Stream.empty();
 			}
@@ -170,22 +170,29 @@ public class Main{
 		}
 	}
 	
-	private static DownloadElement createDownload(final String folder, final ChannelSftp.LsEntry file, final Path folderOut) throws IOException{
-		final String date;
-		final var datePart = file.getFilename().substring(0, file.getFilename().lastIndexOf("."));
-		try{
-			if(datePart.chars().allMatch(Character::isDigit)){
-				date = outDateFormatter.format(new Date(Long.parseLong(datePart) * 1000));
+	private static DownloadElement createDownload(final String folder, final ChannelSftp.LsEntry file, final Path folderOut, final boolean isFilenameDate) throws IOException{
+		final String filename;
+		if(isFilenameDate){
+			final var datePart = file.getFilename().substring(0, file.getFilename().lastIndexOf("."));
+			try{
+				final String date;
+				if(datePart.chars().allMatch(Character::isDigit)){
+					date = outDateFormatter.format(new Date(Long.parseLong(datePart) * 1000));
+				}
+				else{
+					date = OffsetDateTime.from(dateTimeFormatter.parse(datePart)).format(outDateTimeFormatter);
+				}
+				filename = date + file.getFilename().substring(file.getFilename().lastIndexOf("."));
 			}
-			else{
-				date = OffsetDateTime.from(dateTimeFormatter.parse(datePart)).format(outDateTimeFormatter);
+			catch(final NumberFormatException e){
+				log.error("Error parsing filename {}", datePart);
+				return null;
 			}
 		}
-		catch(final NumberFormatException e){
-			log.error("Error parsing filename {}", datePart);
-			return null;
+		else{
+			filename = file.getFilename();
 		}
-		final var fileOut = folderOut.resolve(date + file.getFilename().substring(file.getFilename().lastIndexOf(".")));
+		final var fileOut = folderOut.resolve(filename);
 		if(fileOut.toFile().exists()){
 			return null;
 		}
