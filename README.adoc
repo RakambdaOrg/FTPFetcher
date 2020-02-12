@@ -15,18 +15,18 @@ This is a JSON file following this pattern:
 [source,json5]
 ----
 {
-	"ftpHost": "url.to.ftp",
-	"ftpUser": "user",
-	"ftpPass": "password",
-	"folders": [
-		{
-			"localFolder": "./my/local/folder",
-			"ftpFolder": "/distant/folder",
-			"recursive": true, // default: false
-			"fileFilter": ".*\\.(jpg|mp4|mov)$", // default: ".*"
-            "isFilenameDate": false, // default: true
-            "deleteOnSuccess": true // default: false
-		}
-	]
+  "ftpHost": "url.to.ftp",
+  "ftpUser": "user",
+  "ftpPass": "password",
+  "folders": [
+    {
+      "localFolder": "./my/local/folder",
+      "ftpFolder": "/distant/folder",
+      "recursive": true, // default: false
+      "fileFilter": ".*\\.(jpg|mp4|mov)$", // default: ".*"
+      "isFilenameDate": false, // default: true
+      "deleteOnSuccess": true // default: false
+    }
+  ]
 }
 ----
