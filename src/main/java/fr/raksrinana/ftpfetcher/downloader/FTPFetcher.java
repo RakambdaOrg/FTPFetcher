@@ -44,8 +44,8 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				final var startDownload = System.currentTimeMillis();
 				final var result = new DownloadResult(element, false);
 				results.add(result);
-				final var fileOut = element.getFileOut().toFile();
-				var downloaded = fileOut.exists();
+				final var fileOut = element.getFileOut();
+				var downloaded = Files.exists(fileOut);
 				log.debug("Downloading file {}", element.getRemotePath());
 				progressBar.setExtraMessage(element.getSftpFile().getFilename());
 				if(!downloaded){
@@ -55,31 +55,52 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 					}
 					catch(final IOException e){
 						log.warn("IO - Error downloading file", e);
-						fileOut.deleteOnExit();
+						try{
+							Files.deleteIfExists(fileOut);
+						}
+						catch(final IOException ignored){
+						}
 						continue;
 					}
 					catch(final SftpException e){
 						log.warn("SFTP - Error downloading file", e);
-						fileOut.deleteOnExit();
+						try{
+							Files.deleteIfExists(fileOut);
+						}
+						catch(final IOException ignored){
+						}
 						if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed")){
 							connection.reopen();
 						}
 						continue;
 					}
 					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getSftpFile().getAttrs().getATime() * 1000L));
-					final var fileLength = fileOut.length();
-					final var expectedFileLength = element.getSftpFile().getAttrs().getSize();
-					if(expectedFileLength == fileLength){
-						downloaded = true;
+					try{
+						final long fileLength = Files.size(fileOut);
+						final var expectedFileLength = element.getSftpFile().getAttrs().getSize();
+						if(expectedFileLength == fileLength){
+							downloaded = true;
+						}
+						else{
+							log.warn("Sizes mismatch expected:{} actual:{} difference: {}", expectedFileLength, fileLength, fileLength - expectedFileLength);
+						}
 					}
-					else{
-						log.warn("Sizes mismatch expected:{} actual:{} difference: {}", expectedFileLength, fileLength, fileLength - expectedFileLength);
+					catch(final IOException ignored){
 					}
 				}
 				if(downloaded){
 					element.setDownloadedAt(LocalDateTime.now());
 					result.setDownloaded(true);
 					toMarkDownloaded.add(element);
+					if(element.isDeleteOnSuccess()){
+						try{
+							log.info("Deleting remote file {}", element.getRemotePath());
+							connection.getSftpChannel().rm(element.getRemotePath());
+						}
+						catch(final SftpException e){
+							log.error("Failed to delete remote file {} after a successful download", element.getRemotePath(), e);
+						}
+					}
 					progressBar.step();
 				}
 				if(toMarkDownloaded.size() >= MARK_DOWNLOADED_THRESHOLD){

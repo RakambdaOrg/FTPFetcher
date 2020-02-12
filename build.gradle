@@ -53,7 +53,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
 
     implementation("commons-io:commons-io:${project.commons_io_version}")
-    implementation("me.tongfei:progressbar:${project.progressbar_version}")
+    implementation("me.tongfei:progressbar:${project.progressbar_version}"){
+        exclude group: 'org.jline', module: 'jline'
+    }
     implementation("com.beust:jcommander:${project.jcommander_version}")
 
     implementation("com.zaxxer:HikariCP:${project.hikari_version}")

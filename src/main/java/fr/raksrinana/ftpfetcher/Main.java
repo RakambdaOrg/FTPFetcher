@@ -16,8 +16,6 @@ import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.utils.base.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,15 +50,21 @@ public class Main{
 			return;
 		}
 		final var lockFile = parameters.getDatabasePath().resolveSibling(parameters.getDatabasePath().getFileName() + ".lock").normalize().toAbsolutePath();
-		if(lockFile.toFile().exists()){
-			log.error("Program is already running, lock file {} is present", lockFile.toFile());
+		if(Files.exists(lockFile)){
+			log.error("Program is already running, lock file {} is present", lockFile);
 			System.exit(1);
 		}
-		touch(lockFile.toFile());
+		Files.createFile(lockFile);
 		lockFile.toFile().deleteOnExit();
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			if(executor != null){
 				executor.shutdownNow();
+			}
+			try{
+				Files.deleteIfExists(lockFile);
+			}
+			catch(final IOException e){
+				log.error("Failed to delete lock file {}", lockFile);
 			}
 		}));
 		Settings.loadSettings(parameters.getProperties()).ifPresentOrElse(settings -> {
@@ -75,7 +79,7 @@ public class Main{
 				final var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
 				for(final var folderSettings : settings.getFolders()){
 					try(final var connection = new FTPConnection(jsch, settings)){
-						downloadSet.addAll(fetchFolder(database, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isFilenameDate()));
+						downloadSet.addAll(fetchFolder(database, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess(), folderSettings.isFilenameDate()));
 					}
 					catch(final JSchException | SftpException e){
 						if(e.getMessage().equals("No such file")){
@@ -119,7 +123,7 @@ public class Main{
 				try{
 					return f.get();
 				}
-				catch(InterruptedException | ExecutionException e){
+				catch(final InterruptedException | ExecutionException e){
 					log.error("Error waiting for fetcher", e);
 				}
 				return null;
@@ -133,7 +137,7 @@ public class Main{
 		return database.removeUseless();
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter, final boolean isFilenameDate) throws SftpException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter, final boolean deleteOnSuccess, final boolean isFilenameDate) throws SftpException{
 		log.info("Fetching folder {}", folder);
 		final var array = connection.getSftpChannel().ls(folder).toArray();
 		log.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
@@ -148,14 +152,14 @@ public class Main{
 		}).flatMap(f -> {
 			try{
 				if(recursive && f.getAttrs().isDir()){
-					return fetchFolder(database, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter, isFilenameDate).stream();
+					return fetchFolder(database, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter, deleteOnSuccess, isFilenameDate).stream();
 				}
 				if(!f.getAttrs().isDir() && fileFilter.matcher(f.getFilename()).matches()){
-					return Stream.of(createDownload(folder, f, outPath, isFilenameDate));
+					return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess, isFilenameDate));
 				}
 				return Stream.empty();
 			}
-			catch(Exception e){
+			catch(final Exception e){
 				log.error("Error fetching folder {}", f.getLongname(), e);
 			}
 			return null;
@@ -164,13 +168,7 @@ public class Main{
 		return toDL;
 	}
 	
-	private static void touch(final File file) throws IOException{
-		if(!file.exists()){
-			new FileOutputStream(file).close();
-		}
-	}
-	
-	private static DownloadElement createDownload(final String folder, final ChannelSftp.LsEntry file, final Path folderOut, final boolean isFilenameDate) throws IOException{
+	private static DownloadElement createDownload(final String folder, final ChannelSftp.LsEntry file, final Path folderOut, final boolean deleteOnSuccess, final boolean isFilenameDate) throws IOException{
 		final String filename;
 		if(isFilenameDate){
 			final var datePart = file.getFilename().substring(0, file.getFilename().lastIndexOf("."));
@@ -197,6 +195,6 @@ public class Main{
 			return null;
 		}
 		Files.createDirectories(fileOut.getParent());
-		return new DownloadElement(folder, file, fileOut, LocalDateTime.now());
+		return new DownloadElement(folder, file, fileOut, deleteOnSuccess, LocalDateTime.MIN);
 	}
 }

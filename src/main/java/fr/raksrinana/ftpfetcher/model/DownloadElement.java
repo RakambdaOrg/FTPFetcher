@@ -15,14 +15,16 @@ public class DownloadElement{
 	private ChannelSftp.LsEntry sftpFile;
 	private Path fileOut;
 	private String remotePath;
+	private boolean deleteOnSuccess;
 	@Setter
 	private LocalDateTime downloadedAt;
 	
-	public DownloadElement(final String folder, final ChannelSftp.LsEntry sftpFile, final Path fileOut, final LocalDateTime downloadedAt){
+	public DownloadElement(final String folder, final ChannelSftp.LsEntry sftpFile, final Path fileOut, final boolean deleteOnSuccess, final LocalDateTime downloadedAt){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.sftpFile = sftpFile;
 		this.remotePath = folder + sftpFile.getFilename();
 		this.fileOut = fileOut;
+		this.deleteOnSuccess = deleteOnSuccess;
 		this.downloadedAt = downloadedAt;
 	}
 	
