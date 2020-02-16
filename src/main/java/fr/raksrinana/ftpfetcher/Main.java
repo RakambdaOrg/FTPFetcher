@@ -38,6 +38,7 @@ public class Main{
 	private static final DateTimeFormatter outDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ssZ");
 	private static ExecutorService executor;
+	private static ConsoleHandler consoleHandler;
 	
 	public static void main(final String[] args) throws IOException{
 		final var parameters = new CLIParameters();
@@ -67,6 +68,8 @@ public class Main{
 				log.error("Failed to delete lock file {}", lockFile);
 			}
 		}));
+		consoleHandler = new ConsoleHandler();
+		consoleHandler.start();
 		Settings.loadSettings(parameters.getProperties()).ifPresentOrElse(settings -> {
 			try(final var database = new Database(parameters.getDatabasePath().toAbsolutePath())){
 				JSch.setConfig("StrictHostKeyChecking", "no");
@@ -102,6 +105,7 @@ public class Main{
 				log.error("Uncaught exception", e);
 			}
 		}, () -> log.error("Failed to load settings in {}", parameters.getProperties()));
+		consoleHandler.close();
 	}
 	
 	private static void downloadElements(final CLIParameters parameters, final JSch jsch, final Settings settings, final Database database, final Queue<DownloadElement> downloadElements){
@@ -113,7 +117,11 @@ public class Main{
 		try(final var progressBar = new ProgressBar("", downloadElements.size())){
 			final var progressBarHandler = new ProgressBarHandler(progressBar);
 			try{
-				futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> new FTPFetcher(jsch, settings, database, downloadElements, progressBarHandler)).map(executor::submit).collect(Collectors.toList());
+				futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> {
+					final var fetcher = new FTPFetcher(jsch, settings, database, downloadElements, progressBarHandler);
+					consoleHandler.addFetcher(fetcher);
+					return fetcher;
+				}).map(executor::submit).collect(Collectors.toList());
 			}
 			catch(final Exception e){
 				log.error("Error building fetchers", e);

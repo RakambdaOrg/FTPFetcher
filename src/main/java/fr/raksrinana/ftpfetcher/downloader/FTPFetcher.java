@@ -25,6 +25,8 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private final Queue<DownloadElement> downloadElements;
 	private final JSch jsch;
 	private final ProgressBarHandler progressBar;
+	private boolean stop;
+	private boolean pause;
 	
 	public FTPFetcher(final JSch jsch, final Settings settings, final Database database, final Queue<DownloadElement> downloadElements, final ProgressBarHandler progressBar){
 		this.jsch = jsch;
@@ -32,6 +34,8 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		this.database = database;
 		this.downloadElements = downloadElements;
 		this.progressBar = progressBar;
+		this.stop = false;
+		this.pause = false;
 	}
 	
 	@Override
@@ -40,7 +44,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		final var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
 		try(final var connection = new FTPConnection(jsch, settings)){
 			DownloadElement element;
-			while((element = downloadElements.poll()) != null){
+			while(!stop && (element = downloadElements.poll()) != null){
 				final var startDownload = System.currentTimeMillis();
 				final var result = new DownloadResult(element, false);
 				results.add(result);
@@ -108,6 +112,14 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				}
 				result.setDownloadTime(System.currentTimeMillis() - startDownload);
 				log.debug("Downloaded file in {}", Duration.ofMillis(result.getDownloadTime()));
+				while(pause){
+					try{
+						Thread.sleep(10_000);
+					}
+					catch(final InterruptedException e){
+						log.error("Error while sleeping", e);
+					}
+				}
 			}
 		}
 		while(!markDownloaded(toMarkDownloaded)){
@@ -142,5 +154,17 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				log.warn("Error setting file attributes for {}", path, e);
 			}
 		}
+	}
+	
+	public void close(){
+		this.stop = true;
+	}
+	
+	public void resume(){
+		this.pause = false;
+	}
+	
+	public void pause(){
+		this.pause = true;
 	}
 }
