@@ -29,7 +29,7 @@ jobs:
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-      - name: Deploy app
+      - name: Build app
         run: ./gradlew build
         env:
           GITHUB_USER: RakSrinaNa
