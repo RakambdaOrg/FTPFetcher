@@ -110,3 +110,7 @@ shadowJar {
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
+
+tasks.withType(Wrapper) {
+    gradleVersion = project.wrapper_version
+}
