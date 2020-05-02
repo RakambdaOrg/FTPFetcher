@@ -59,7 +59,7 @@ dependencies {
     implementation("com.beust:jcommander:${project.jcommander_version}")
 
     implementation("com.zaxxer:HikariCP:${project.hikari_version}")
-    implementation("org.xerial:sqlite-jdbc:${project.jdbc_version}")
+    implementation("com.h2database:h2:${project.h2_version}")
 }
 
 repositories {

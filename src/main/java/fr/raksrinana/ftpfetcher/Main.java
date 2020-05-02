@@ -127,7 +127,7 @@ public class Main{
 				log.error("Error building fetchers", e);
 			}
 			executor.shutdown();
-			results = futures.parallelStream().map(f -> {
+			results = futures.parallelStream().filter(Objects::nonNull).map(f -> {
 				try{
 					return f.get();
 				}

@@ -58,7 +58,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						fos.flush();
 					}
 					catch(final IOException e){
-						log.warn("IO - Error downloading file", e);
+						log.warn("IO - Error downloading file {}", element, e);
 						try{
 							Files.deleteIfExists(fileOut);
 						}

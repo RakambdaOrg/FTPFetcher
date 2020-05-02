@@ -20,7 +20,7 @@ public class Database implements AutoCloseable{
 	
 	public Database(final Path dbFile) throws SQLException{
 		final var config = new HikariConfig();
-		config.setJdbcUrl("jdbc:sqlite:" + dbFile.toAbsolutePath());
+		config.setJdbcUrl("jdbc:h2:" + dbFile.toAbsolutePath());
 		config.addDataSourceProperty("cachePrepStmts", "true");
 		config.addDataSourceProperty("prepStmtCacheSize", "250");
 		config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -53,15 +53,6 @@ public class Database implements AutoCloseable{
 		return files.values();
 	}
 	
-	public boolean isDownloaded(final DownloadElement element) throws SQLException{
-		try(final var connection = datasource.getConnection(); final var statement = connection.prepareStatement("SELECT * FROM Downloaded WHERE Filee=?")){
-			statement.setString(1, element.getRemotePath().replace("\\", "/"));
-			try(final var result = statement.executeQuery()){
-				return result.next();
-			}
-		}
-	}
-	
 	@Override
 	public void close(){
 		log.info("Closing SQL Connection...");
@@ -71,7 +62,7 @@ public class Database implements AutoCloseable{
 	public int removeUseless(){
 		log.info("Removing useless entries from database");
 		try(final var connection = datasource.getConnection(); final var statement = connection.createStatement()){
-			return statement.executeUpdate("DELETE FROM Downloaded WHERE DateDownload < DATETIME('now','-15 days')");
+			return statement.executeUpdate("DELETE FROM Downloaded WHERE DateDownload < DATEADD('DAY',-15,CURRENT_DATE)");
 		}
 		catch(final SQLException e){
 			log.error("Error removing useless entries in DB", e);
@@ -79,21 +70,9 @@ public class Database implements AutoCloseable{
 		return 0;
 	}
 	
-	public int setDownloaded(final DownloadElement element){
-		try(final var connection = datasource.getConnection(); final var statement = connection.prepareStatement("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES(?,?)")){
-			statement.setString(1, element.getRemotePath().replace("\\", "/"));
-			statement.setString(2, LocalDateTime.now().toString());
-			return statement.executeUpdate();
-		}
-		catch(final SQLException e){
-			log.error("Failed to set element downloaded", e);
-		}
-		return 0;
-	}
-	
 	public int setDownloaded(final Collection<DownloadElement> elements){
 		final var downloadDate = LocalDateTime.now().toString();
-		try(final var connection = datasource.getConnection(); final var statement = connection.prepareStatement("INSERT OR IGNORE INTO Downloaded(Filee,DateDownload) VALUES(?,?)")){
+		try(final var connection = datasource.getConnection(); final var statement = connection.prepareStatement("MERGE INTO Downloaded(Filee,DateDownload) VALUES(?,?)")){
 			for(final var element : elements){
 				statement.setString(1, element.getRemotePath().replace("\\", "/"));
 				statement.setString(2, downloadDate);
