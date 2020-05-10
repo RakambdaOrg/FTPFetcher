@@ -33,7 +33,6 @@ group = 'fr.raksrinana'
 description = 'FTPFetcher'
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_14
 
-ext.moduleName = project.moduleName
 mainClassName = project.mainClass
 
 dependencies {
@@ -96,10 +95,13 @@ compileJava {
     }
 }
 
-jar {
-    manifest {
-        attributes 'Main-Class': project.mainClass
-    }
+application {
+    mainModule = project.moduleName
+    mainClass = project.mainClass
+}
+
+java {
+    modularity.inferModulePath.set(true)
 }
 
 shadowJar {
