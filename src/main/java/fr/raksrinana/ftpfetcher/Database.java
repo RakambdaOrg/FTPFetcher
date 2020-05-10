@@ -3,13 +3,14 @@ package fr.raksrinana.ftpfetcher;
 import com.jcraft.jsch.ChannelSftp;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.utils.config.H2Manager;
+import fr.raksrinana.utils.config.PreparedStatementFiller;
+import fr.raksrinana.utils.config.SQLValue;
 import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -38,13 +39,8 @@ public class Database extends H2Manager{
 	
 	public int setDownloaded(final Collection<DownloadElement> elements){
 		final var downloadDate = LocalDateTime.now().toString();
-		try(final var connection = getDatasource().getConnection(); final var statement = connection.prepareStatement("MERGE INTO Downloaded(Filee,DateDownload) VALUES(?,?)")){
-			for(final var element : elements){
-				statement.setString(1, element.getRemotePath().replace("\\", "/"));
-				statement.setString(2, downloadDate);
-				statement.addBatch();
-			}
-			final var result = Arrays.stream(statement.executeBatch()).sum();
+		try{
+			final var result = this.sendPreparedBatchUpdateRequest("MERGE INTO Downloaded(Filee,DateDownload) VALUES(?,?)", elements.stream().map(elem -> new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, elem.getRemotePath().replace("\\", "/")), new SQLValue(SQLValue.Type.STRING, downloadDate))).collect(Collectors.toList()));
 			log.debug("Set downloaded status for {} items", result);
 			return result;
 		}

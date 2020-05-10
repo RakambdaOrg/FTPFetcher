@@ -58,8 +58,6 @@ dependencies {
         exclude group: 'org.jline', module: 'jline'
     }
     implementation("com.beust:jcommander:${project.jcommander_version}")
-
-    implementation("com.zaxxer:HikariCP:${project.hikari_version}")
 }
 
 repositories {
@@ -105,9 +103,8 @@ java {
 }
 
 shadowJar {
-    baseName = project.name
+    archivesBaseName = project.name
     classifier = 'shaded'
-    version = null
 }
 
 tasks.withType(JavaCompile) {
