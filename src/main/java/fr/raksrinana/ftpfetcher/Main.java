@@ -19,6 +19,7 @@ import me.tongfei.progressbar.ProgressBar;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -142,10 +143,16 @@ public class Main{
 	}
 	
 	private static int removeUselessDownloadsInDb(final Database database){
-		return database.removeUseless();
+		try{
+			return database.removeUseless();
+		}
+		catch(final SQLException throwables){
+			log.error("Failed to remove useless entries", throwables);
+		}
+		return 0;
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter, final boolean deleteOnSuccess, final boolean isFilenameDate) throws SftpException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter, final boolean deleteOnSuccess, final boolean isFilenameDate) throws SftpException, SQLException{
 		log.info("Fetching folder {}", folder);
 		final var array = connection.getSftpChannel().ls(folder).toArray();
 		log.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
