@@ -26,8 +26,10 @@ jobs:
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+      - name: Set wrapper permissions
+        run: chmod +x gradlew
       - name: Check project
-        run: chmod +x gradlew && ./gradlew check
+        run: ./gradlew check
         env:
           GITHUB_USER: RakSrinaNa
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

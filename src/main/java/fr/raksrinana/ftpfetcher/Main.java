@@ -1,7 +1,5 @@
 package fr.raksrinana.ftpfetcher;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -16,9 +14,11 @@ import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.utils.base.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
+import picocli.CommandLine;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -43,14 +43,18 @@ public class Main{
 	
 	public static void main(final String[] args) throws IOException{
 		final var parameters = new CLIParameters();
+		final var cli = new CommandLine(parameters);
+		cli.registerConverter(Path.class, Paths::get);
+		cli.setUnmatchedArgumentsAllowed(true);
 		try{
-			JCommander.newBuilder().addObject(parameters).build().parse(args);
+			cli.parseArgs(args);
 		}
-		catch(final ParameterException e){
+		catch(final CommandLine.ParameterException e){
 			log.error("Failed to parse arguments", e);
-			e.usage();
+			cli.usage(System.out);
 			return;
 		}
+		
 		final var lockFile = parameters.getDatabasePath().resolveSibling(parameters.getDatabasePath().getFileName() + ".lock").normalize().toAbsolutePath();
 		if(Files.exists(lockFile)){
 			log.error("Program is already running, lock file {} is present", lockFile);

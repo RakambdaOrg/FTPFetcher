@@ -2,7 +2,7 @@ open module fr.raksrinana.ftpfetcher {
 	requires java.sql;
 	requires fr.raksrinana.utils.base;
 	requires fr.raksrinana.utils.config;
-	requires jcommander;
+	requires info.picocli;
 	requires org.apache.commons.io;
 	requires progressbar;
 	requires static lombok;
