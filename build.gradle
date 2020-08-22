@@ -7,7 +7,7 @@ buildscript {
         commons_io_version = '2.7'
         progressbar_version = '0.8.1'
         picocli_version = '4.5.0'
-        jackson_version = '2.11.0'
+        jackson_version = '2.11.2'
     }
 }
 
