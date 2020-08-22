@@ -15,12 +15,7 @@
         </encoder>
     </appender>
 
-    <logger name="net.dv8tion.jda" level="WARN" additivity="false">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
-    </logger>
-
-    <logger name="com.sedmelluq.discord.lavaplayer" level="WARN" additivity="false">
+    <logger name="fr.mrcraftcod.utils" level="WARN" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </logger>
