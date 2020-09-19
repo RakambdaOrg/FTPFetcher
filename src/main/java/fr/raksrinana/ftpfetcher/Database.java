@@ -25,9 +25,16 @@ public class Database extends H2Manager{
 	Collection<ChannelSftp.LsEntry> getOnlyNotDownloaded(final String folder, final Collection<ChannelSftp.LsEntry> entries) throws SQLException{
 		final var files = new HashMap<String, ChannelSftp.LsEntry>();
 		for(final var entry : entries){
-			files.put(Paths.get(folder).resolve(entry.getFilename().replace(":", ".")).toString().replace("\\", "/"), entry);
+			files.put(Paths.get(folder)
+							.resolve(entry.getFilename().replace(":", "."))
+							.toString()
+							.replace("\\", "/"),
+					entry);
 		}
-		final var filesFilter = files.keySet().stream().map(str -> str.replace("'", "\\'")).map(str -> "'" + str + "'").collect(Collectors.joining(","));
+		final var filesFilter = files.keySet().stream()
+				.map(str -> str.replace("'", "\\'"))
+				.map(str -> "'" + str + "'")
+				.collect(Collectors.joining(","));
 		sendQueryRequest("SELECT Filee FROM Downloaded WHERE Filee IN (" + filesFilter + ")", rs -> rs.getString("Filee")).forEach(files::remove);
 		return files.values();
 	}
@@ -40,7 +47,11 @@ public class Database extends H2Manager{
 	public int setDownloaded(final Collection<DownloadElement> elements){
 		final var downloadDate = LocalDateTime.now().toString();
 		try{
-			final var result = this.sendPreparedBatchUpdateRequest("MERGE INTO Downloaded(Filee,DateDownload) VALUES(?,?)", elements.stream().map(elem -> new PreparedStatementFiller(new SQLValue(SQLValue.Type.STRING, elem.getRemotePath().replace("\\", "/")), new SQLValue(SQLValue.Type.STRING, downloadDate))).collect(Collectors.toList()));
+			final var result = this.sendPreparedBatchUpdateRequest("MERGE INTO Downloaded(Filee,DateDownload) VALUES(?,?)", elements.stream()
+					.map(elem -> new PreparedStatementFiller(
+							new SQLValue(SQLValue.Type.STRING, elem.getRemotePath().replace("\\", "/")),
+							new SQLValue(SQLValue.Type.STRING, downloadDate)))
+					.collect(Collectors.toList()));
 			log.debug("Set downloaded status for {} items", result);
 			return result;
 		}

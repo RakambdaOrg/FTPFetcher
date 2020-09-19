@@ -55,7 +55,10 @@ public class Main{
 			return;
 		}
 		
-		final var lockFile = parameters.getDatabasePath().resolveSibling(parameters.getDatabasePath().getFileName() + ".lock").normalize().toAbsolutePath();
+		final var lockFile = parameters.getDatabasePath()
+				.resolveSibling(parameters.getDatabasePath().getFileName() + ".lock")
+				.normalize()
+				.toAbsolutePath();
 		if(Files.exists(lockFile)){
 			log.error("Program is already running, lock file {} is present", lockFile);
 			System.exit(1);
