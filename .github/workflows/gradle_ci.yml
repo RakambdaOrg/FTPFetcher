@@ -76,6 +76,6 @@ jobs:
         uses: deka0106/upload-to-dropbox@v2
         with:
           dropbox_access_token: ${{ secrets.DROPBOX_DEPLOY_TOKEN }}
-          file: "build/libs/ftpfetcher-shaded.jar"
-          path: "/Documents/JARs/FTPFetcher.jar"
+          src: "build/libs/ftpfetcher-shaded.jar"
+          dest: "/Documents/JARs/FTPFetcher.jar"
           mode: overwrite
