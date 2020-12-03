@@ -73,8 +73,9 @@ jobs:
           GITHUB_USER: RakSrinaNa
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy on Dropbox
-        uses: deka0106/upload-to-dropbox@v1
+        uses: deka0106/upload-to-dropbox@v2
         with:
           dropbox_access_token: ${{ secrets.DROPBOX_DEPLOY_TOKEN }}
           file: "build/libs/ftpfetcher-shaded.jar"
           path: "/Documents/JARs/FTPFetcher.jar"
+          mode: overwrite
