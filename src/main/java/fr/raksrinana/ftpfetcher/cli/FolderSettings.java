@@ -24,8 +24,6 @@ public class FolderSettings{
 	private Path localFolder;
 	@JsonProperty("ftpFolder")
 	private String ftpFolder;
-	@JsonProperty("isFilenameDate")
-	private boolean filenameDate = true;
 	@JsonProperty("deleteOnSuccess")
 	private boolean deleteOnSuccess = false;
 }

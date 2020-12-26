@@ -20,12 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Pattern;
@@ -35,9 +31,6 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class Main{
-	private static final DateFormat outDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss");
-	private static final DateTimeFormatter outDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss");
-	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ssZ");
 	private static ExecutorService executor;
 	private static ConsoleHandler consoleHandler;
 	
@@ -90,7 +83,7 @@ public class Main{
 				final var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
 				for(final var folderSettings : settings.getFolders()){
 					try(final var connection = new FTPConnection(jsch, settings)){
-						downloadSet.addAll(fetchFolder(database, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess(), folderSettings.isFilenameDate()));
+						downloadSet.addAll(fetchFolder(database, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess()));
 					}
 					catch(final JSchException | SftpException e){
 						if(e.getMessage().equals("No such file")){
@@ -159,7 +152,7 @@ public class Main{
 		return 0;
 	}
 	
-	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter, final boolean deleteOnSuccess, final boolean isFilenameDate) throws SftpException, SQLException{
+	private static Collection<? extends DownloadElement> fetchFolder(final Database database, final FTPConnection connection, final String folder, final Path outPath, final boolean recursive, final Pattern fileFilter, final boolean deleteOnSuccess) throws SftpException, SQLException{
 		log.info("Fetching folder {}", folder);
 		final var array = connection.getSftpChannel().ls(folder).toArray();
 		log.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
@@ -174,10 +167,10 @@ public class Main{
 		}).flatMap(f -> {
 			try{
 				if(recursive && f.getAttrs().isDir()){
-					return fetchFolder(database, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter, deleteOnSuccess, isFilenameDate).stream();
+					return fetchFolder(database, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter, deleteOnSuccess).stream();
 				}
 				if(!f.getAttrs().isDir() && fileFilter.matcher(f.getFilename()).matches()){
-					return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess, isFilenameDate));
+					return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess));
 				}
 				return Stream.empty();
 			}
@@ -190,30 +183,9 @@ public class Main{
 		return toDL;
 	}
 	
-	private static DownloadElement createDownload(final String folder, final ChannelSftp.LsEntry file, final Path folderOut, final boolean deleteOnSuccess, final boolean isFilenameDate) throws IOException{
-		final String filename;
-		if(isFilenameDate){
-			final var datePart = file.getFilename().substring(0, file.getFilename().lastIndexOf("."));
-			try{
-				final String date;
-				if(datePart.chars().allMatch(Character::isDigit)){
-					date = outDateFormatter.format(new Date(Long.parseLong(datePart) * 1000));
-				}
-				else{
-					date = OffsetDateTime.from(dateTimeFormatter.parse(datePart)).format(outDateTimeFormatter);
-				}
-				filename = date + file.getFilename().substring(file.getFilename().lastIndexOf("."));
-			}
-			catch(final NumberFormatException e){
-				log.error("Error parsing filename {}", datePart);
-				return null;
-			}
-		}
-		else{
-			filename = file.getFilename();
-		}
-		final var fileOut = folderOut.resolve(filename);
-		if(fileOut.toFile().exists()){
+	private static DownloadElement createDownload(final String folder, final ChannelSftp.LsEntry file, final Path folderOut, final boolean deleteOnSuccess) throws IOException{
+		final var fileOut = folderOut.resolve(file.getFilename());
+		if(Files.exists(fileOut)){
 			return null;
 		}
 		Files.createDirectories(fileOut.getParent());
