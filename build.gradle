@@ -6,7 +6,7 @@ buildscript {
         raksrinana_utils_version = '15.0.0'
         commons_io_version = '2.8.0'
         progressbar_version = '0.9.0'
-        picocli_version = '4.5.2'
+        picocli_version = '4.6.1'
         jackson_version = '2.12.0'
     }
 }
