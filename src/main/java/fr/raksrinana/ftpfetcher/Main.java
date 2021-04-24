@@ -12,7 +12,7 @@ import fr.raksrinana.ftpfetcher.downloader.ProgressBarHandler;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.utils.base.FileUtils;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import picocli.CommandLine;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-@Slf4j
+@Log4j2
 public class Main{
 	private static ExecutorService executor;
 	private static ConsoleHandler consoleHandler;

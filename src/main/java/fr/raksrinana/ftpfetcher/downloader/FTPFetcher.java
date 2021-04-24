@@ -7,7 +7,7 @@ import fr.raksrinana.ftpfetcher.Database;
 import fr.raksrinana.ftpfetcher.cli.Settings;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-@Slf4j
+@Log4j2
 public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private static final int MARK_DOWNLOADED_THRESHOLD = 25;
 	private final Settings settings;

@@ -1,7 +1,7 @@
 package fr.raksrinana.ftpfetcher;
 
 import fr.raksrinana.ftpfetcher.downloader.FTPFetcher;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -10,7 +10,7 @@ import java.util.Scanner;
 /**
  * Handles commands sent in the standard input.
  */
-@Slf4j
+@Log4j2
 class ConsoleHandler extends Thread{
 	private static final int WAIT_DELAY = 10000;
 	private final Collection<FTPFetcher> fetchers = new LinkedList<>();

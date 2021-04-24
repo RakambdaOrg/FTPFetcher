@@ -4,7 +4,7 @@ plugins {
     application
     id("com.github.johnrengelman.shadow") version ("6.1.0")
     id("com.github.ben-manes.versions") version ("0.38.0")
-    id("io.freefair.lombok") version ("5.3.0")
+    id("io.freefair.lombok") version ("6.0.0-m2")
 }
 
 group = "fr.raksrinana"
@@ -17,10 +17,7 @@ dependencies {
     }
 
     implementation(libs.slf4j)
-    implementation(libs.logback) {
-        exclude(group = "edu.washington.cs.types.checker", module = "checker-framework")
-        exclude(group = "javax.activation", module = "activation")
-    }
+    implementation(libs.bundles.log4j2)
 
     implementation(libs.bundles.raksrinanaUtils)
 
@@ -44,9 +41,6 @@ repositories {
             password = githubRepoPassword
         }
     }
-    maven {
-        url = uri("https://projectlombok.org/edge-releases")
-    }
     mavenCentral()
     jcenter()
 }
@@ -68,6 +62,12 @@ tasks {
             compilerArgs.add("--module-path")
             compilerArgs.add(classpath.asPath)
             classpath = files()
+        }
+    }
+
+    jar {
+        manifest {
+            attributes["Multi-Release"] = "true"
         }
     }
 
@@ -95,8 +95,4 @@ application {
 java {
     sourceCompatibility = JavaVersion.VERSION_16
     targetCompatibility = JavaVersion.VERSION_16
-}
-
-lombok {
-    version.set("edge-SNAPSHOT")
 }

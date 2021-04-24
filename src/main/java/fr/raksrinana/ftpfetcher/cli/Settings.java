@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @NoArgsConstructor
-@Slf4j
+@Log4j2
 public class Settings{
 	@JsonIgnore
 	private static final ObjectReader objectReader;

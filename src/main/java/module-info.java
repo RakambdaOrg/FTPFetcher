@@ -7,7 +7,10 @@ open module fr.raksrinana.ftpfetcher {
 	requires progressbar;
 	requires static lombok;
 	requires org.slf4j;
-	requires ch.qos.logback.classic;
+	requires org.apache.logging.log4j;
+	requires org.apache.logging.log4j.core;
+	requires org.apache.logging.log4j.slf4j;
+	requires java.scripting;
 	requires jsch;
 	requires com.fasterxml.jackson.core;
 	requires com.fasterxml.jackson.annotation;

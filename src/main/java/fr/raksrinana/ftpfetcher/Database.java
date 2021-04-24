@@ -5,7 +5,7 @@ import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
 import fr.raksrinana.utils.config.SQLValue;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
-@Slf4j
+@Log4j2
 public class Database extends H2Manager{
 	public Database(final Path dbFile) throws SQLException, IOException{
 		super(dbFile);
