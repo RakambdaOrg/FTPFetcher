@@ -120,7 +120,7 @@ public class Main{
 		log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(r -> r.getSftpFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
 		var startDownload = System.currentTimeMillis();
 		executor = Executors.newFixedThreadPool(parameters.getThreadCount());
-		var futures = new ArrayList<Future<Collection<DownloadResult>>>();
+		List<Future<Collection<DownloadResult>>> futures = new ArrayList<>();
 		List<DownloadResult> results;
 		try(var progressBar = new ProgressBar("", downloadElements.size())){
 			var progressBarHandler = new ProgressBarHandler(progressBar);
