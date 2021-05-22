@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher;
+package fr.raksrinana.ftpfetcher.storage;
 
 import com.jcraft.jsch.ChannelSftp;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
@@ -6,6 +6,7 @@ import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
 import fr.raksrinana.utils.config.SQLValue;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,22 +17,23 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Log4j2
-public class Database extends H2Manager{
-	public Database(final Path dbFile) throws SQLException, IOException{
+public class H2Storage extends H2Manager implements IStorage{
+	public H2Storage(Path dbFile) throws SQLException, IOException{
 		super(dbFile);
 		sendUpdateRequest("CREATE TABLE IF NOT EXISTS Downloaded(Filee VARCHAR(512) NOT NULL, DateDownload DATETIME,PRIMARY KEY(Filee))");
 	}
 	
-	Collection<ChannelSftp.LsEntry> getOnlyNotDownloaded(final String folder, final Collection<ChannelSftp.LsEntry> entries) throws SQLException{
-		final var files = new HashMap<String, ChannelSftp.LsEntry>();
-		for(final var entry : entries){
+	@NotNull
+	public Collection<ChannelSftp.LsEntry> getOnlyNotDownloaded(@NotNull String folder, @NotNull Collection<ChannelSftp.LsEntry> entries) throws SQLException{
+		var files = new HashMap<String, ChannelSftp.LsEntry>();
+		for(var entry : entries){
 			files.put(Paths.get(folder)
 							.resolve(entry.getFilename().replace(":", "."))
 							.toString()
 							.replace("\\", "/"),
 					entry);
 		}
-		final var filesFilter = files.keySet().stream()
+		var filesFilter = files.keySet().stream()
 				.map(str -> str.replace("'", "\\'"))
 				.map(str -> "'" + str + "'")
 				.collect(Collectors.joining(","));
@@ -44,10 +46,10 @@ public class Database extends H2Manager{
 		return sendUpdateRequest("DELETE FROM Downloaded WHERE DateDownload < DATEADD('DAY',-15,CURRENT_DATE)");
 	}
 	
-	public int setDownloaded(final Collection<DownloadElement> elements){
-		final var downloadDate = LocalDateTime.now().toString();
+	public int setDownloaded(@NotNull Collection<DownloadElement> elements){
+		var downloadDate = LocalDateTime.now().toString();
 		try{
-			final var result = this.sendPreparedBatchUpdateRequest("MERGE INTO Downloaded(Filee,DateDownload) VALUES(?,?)", elements.stream()
+			var result = sendPreparedBatchUpdateRequest("MERGE INTO Downloaded(Filee,DateDownload) VALUES(?,?)", elements.stream()
 					.map(elem -> new PreparedStatementFiller(
 							new SQLValue(SQLValue.Type.STRING, elem.getRemotePath().replace("\\", "/")),
 							new SQLValue(SQLValue.Type.STRING, downloadDate)))
@@ -55,7 +57,7 @@ public class Database extends H2Manager{
 			log.debug("Set downloaded status for {} items", result);
 			return result;
 		}
-		catch(final SQLException e){
+		catch(SQLException e){
 			log.error("Failed to set elements ({}) downloaded", elements.size(), e);
 		}
 		return 0;

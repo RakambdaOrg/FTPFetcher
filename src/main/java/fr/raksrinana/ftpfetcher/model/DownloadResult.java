@@ -2,6 +2,7 @@ package fr.raksrinana.ftpfetcher.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class DownloadResult{
@@ -11,9 +12,9 @@ public class DownloadResult{
 	@Setter
 	private long downloadTime;
 	
-	public DownloadResult(final DownloadElement element, final boolean downloaded){
+	public DownloadResult(@NotNull DownloadElement element, boolean downloaded){
 		this.element = element;
 		this.downloaded = downloaded;
-		this.downloadTime = 0;
+		downloadTime = 0;
 	}
 }

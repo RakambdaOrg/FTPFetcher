@@ -4,6 +4,7 @@ import com.jcraft.jsch.ChannelSftp;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -19,10 +20,10 @@ public class DownloadElement{
 	@Setter
 	private LocalDateTime downloadedAt;
 	
-	public DownloadElement(final String folder, final ChannelSftp.LsEntry sftpFile, final Path fileOut, final boolean deleteOnSuccess, final LocalDateTime downloadedAt){
+	public DownloadElement(@NotNull String folder, @NotNull ChannelSftp.LsEntry sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.sftpFile = sftpFile;
-		this.remotePath = folder + sftpFile.getFilename();
+		remotePath = folder + sftpFile.getFilename();
 		this.fileOut = fileOut;
 		this.deleteOnSuccess = deleteOnSuccess;
 		this.downloadedAt = downloadedAt;
@@ -34,14 +35,14 @@ public class DownloadElement{
 	}
 	
 	@Override
-	public boolean equals(final Object o){
+	public boolean equals(Object o){
 		if(this == o){
 			return true;
 		}
 		if(o == null || getClass() != o.getClass()){
 			return false;
 		}
-		final DownloadElement that = (DownloadElement) o;
+		DownloadElement that = (DownloadElement) o;
 		return Objects.equals(remotePath, that.remotePath);
 	}
 	

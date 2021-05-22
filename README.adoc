@@ -6,7 +6,7 @@ Download files from a FTP only once.
 
 * `-t`, `--threads`: The number of threads (downloaders) to use (_default `1`_).
 * `-p`, `--properties`: The settings file to use (see [Configuration file](#configuration-file)).
-* `-db`, `--database`: The database file (SQLite) to store the history of downloaded files (the history is reset after 15 days) (_default: `./FTPFetcher.db`_).
+* `-db`, `--database`: The h2Storage file (SQLite) to store the history of downloaded files (the history is reset after 15 days) (_default: `./FTPFetcher.db`_).
 
 == Configuration file
 

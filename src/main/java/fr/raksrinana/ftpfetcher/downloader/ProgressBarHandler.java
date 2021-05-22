@@ -1,14 +1,15 @@
 package fr.raksrinana.ftpfetcher.downloader;
 
 import me.tongfei.progressbar.ProgressBar;
+import org.jetbrains.annotations.NotNull;
 
 public class ProgressBarHandler{
 	private final ProgressBar progressBar;
 	private final Object stepLock;
 	
-	public ProgressBarHandler(final ProgressBar progressBar){
+	public ProgressBarHandler(@NotNull ProgressBar progressBar){
 		this.progressBar = progressBar;
-		this.stepLock = new Object();
+		stepLock = new Object();
 	}
 	
 	public void step(){
@@ -17,7 +18,7 @@ public class ProgressBarHandler{
 		}
 	}
 	
-	public void setExtraMessage(final String s){
-		this.progressBar.setExtraMessage(s);
+	public void setExtraMessage(String s){
+		progressBar.setExtraMessage(s);
 	}
 }

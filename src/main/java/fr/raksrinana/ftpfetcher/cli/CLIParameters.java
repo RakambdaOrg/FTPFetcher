@@ -2,6 +2,8 @@ package fr.raksrinana.ftpfetcher.cli;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,10 +22,12 @@ public class CLIParameters{
 			"-p",
 			"--properties"
 	}, description = "The settings properties to use", required = true)
+	@NotNull
 	private Path properties;
 	@CommandLine.Option(names = {
 			"-db",
 			"--database"
 	}, description = "The path to the database to store downloads to")
+	@Nullable
 	private Path databasePath = Paths.get("FTPFetcher.db");
 }

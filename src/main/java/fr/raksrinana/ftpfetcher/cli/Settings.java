@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,21 +24,25 @@ public class Settings{
 	@JsonIgnore
 	private static final ObjectReader objectReader;
 	@JsonProperty("ftpHost")
+	@NotNull
 	private String ftpHost;
 	@JsonProperty("ftpUser")
+	@NotNull
 	private String ftpUser;
 	@JsonProperty("ftpPass")
+	@NotNull
 	private String ftpPass;
 	@JsonProperty("folders")
+	@NotNull
 	private List<FolderSettings> folders;
 	
 	@NonNull
-	public static Optional<Settings> loadSettings(final Path path){
+	public static Optional<Settings> loadSettings(@NotNull Path path){
 		if(path.toFile().exists()){
-			try(final var fis = new FileInputStream(path.toFile())){
+			try(var fis = new FileInputStream(path.toFile())){
 				return Optional.ofNullable(objectReader.readValue(fis));
 			}
-			catch(final IOException e){
+			catch(IOException e){
 				log.error("Failed to read settings in {}", path, e);
 			}
 		}
@@ -45,7 +50,7 @@ public class Settings{
 	}
 	
 	static{
-		final var mapper = new ObjectMapper();
+		var mapper = new ObjectMapper();
 		mapper.setVisibility(mapper.getSerializationConfig().getDefaultVisibilityChecker()
 				.withFieldVisibility(JsonAutoDetect.Visibility.ANY)
 				.withGetterVisibility(JsonAutoDetect.Visibility.NONE)

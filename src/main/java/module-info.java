@@ -5,7 +5,6 @@ open module fr.raksrinana.ftpfetcher {
 	requires info.picocli;
 	requires org.apache.commons.io;
 	requires progressbar;
-	requires static lombok;
 	requires org.slf4j;
 	requires org.apache.logging.log4j;
 	requires org.apache.logging.log4j.core;
@@ -15,4 +14,6 @@ open module fr.raksrinana.ftpfetcher {
 	requires com.fasterxml.jackson.core;
 	requires com.fasterxml.jackson.annotation;
 	requires com.fasterxml.jackson.databind;
+	requires static lombok;
+	requires static annotations;
 }

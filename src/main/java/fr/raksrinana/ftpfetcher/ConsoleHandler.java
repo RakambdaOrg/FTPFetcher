@@ -2,6 +2,7 @@ package fr.raksrinana.ftpfetcher;
 
 import fr.raksrinana.ftpfetcher.downloader.FTPFetcher;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -18,32 +19,32 @@ class ConsoleHandler extends Thread{
 	
 	ConsoleHandler(){
 		super();
-		this.stop = false;
-		this.setDaemon(true);
-		this.setName("Console watcher");
+		stop = false;
+		setDaemon(true);
+		setName("Console watcher");
 		log.info("Console handler created");
 	}
 	
 	@Override
 	public void run(){
 		log.info("Console handler started");
-		try(final var sc = new Scanner(System.in)){
-			while(!this.stop){
+		try(var sc = new Scanner(System.in)){
+			while(!stop){
 				try{
 					if(!sc.hasNext()){
 						try{
 							Thread.sleep(WAIT_DELAY);
 						}
-						catch(final InterruptedException ignored){
+						catch(InterruptedException ignored){
 						}
 						continue;
 					}
-					final var line = sc.nextLine();
-					final var args = new LinkedList<>(Arrays.asList(line.split(" ")));
+					var line = sc.nextLine();
+					var args = new LinkedList<>(Arrays.asList(line.split(" ")));
 					if(args.isEmpty()){
 						continue;
 					}
-					final var command = args.poll();
+					var command = args.poll();
 					if("q".equals(command)){
 						fetchers.forEach(FTPFetcher::resume);
 						fetchers.forEach(FTPFetcher::close);
@@ -55,7 +56,7 @@ class ConsoleHandler extends Thread{
 						fetchers.forEach(FTPFetcher::resume);
 					}
 				}
-				catch(final Exception e){
+				catch(Exception e){
 					log.warn("Error executing console command", e);
 				}
 			}
@@ -66,10 +67,10 @@ class ConsoleHandler extends Thread{
 	 * Close the console handler.
 	 */
 	void close(){
-		this.stop = true;
+		stop = true;
 	}
 	
-	public void addFetcher(final FTPFetcher fetcher){
-		this.fetchers.add(fetcher);
+	public void addFetcher(@NotNull FTPFetcher fetcher){
+		fetchers.add(fetcher);
 	}
 }

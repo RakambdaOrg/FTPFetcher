@@ -3,11 +3,12 @@ package fr.raksrinana.ftpfetcher.downloader;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
-import fr.raksrinana.ftpfetcher.Database;
 import fr.raksrinana.ftpfetcher.cli.Settings;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
+import fr.raksrinana.ftpfetcher.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,57 +22,58 @@ import java.util.concurrent.Callable;
 public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private static final int MARK_DOWNLOADED_THRESHOLD = 25;
 	private final Settings settings;
-	private final Database database;
+	private final IStorage storage;
 	private final Queue<DownloadElement> downloadElements;
 	private final JSch jsch;
 	private final ProgressBarHandler progressBar;
 	private boolean stop;
 	private boolean pause;
 	
-	public FTPFetcher(final JSch jsch, final Settings settings, final Database database, final Queue<DownloadElement> downloadElements, final ProgressBarHandler progressBar){
+	public FTPFetcher(@NotNull JSch jsch, @NotNull Settings settings, @NotNull IStorage storage, @NotNull Queue<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
 		this.jsch = jsch;
 		this.settings = settings;
-		this.database = database;
+		this.storage = storage;
 		this.downloadElements = downloadElements;
 		this.progressBar = progressBar;
-		this.stop = false;
-		this.pause = false;
+		stop = false;
+		pause = false;
 	}
 	
 	@Override
+	@NotNull
 	public Collection<DownloadResult> call() throws JSchException{
-		final var results = new LinkedList<DownloadResult>();
-		final var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
-		try(final var connection = new FTPConnection(jsch, settings)){
+		var results = new LinkedList<DownloadResult>();
+		var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
+		try(var connection = new FTPConnection(jsch, settings)){
 			DownloadElement element;
 			while(!stop && (element = downloadElements.poll()) != null){
-				final var startDownload = System.currentTimeMillis();
-				final var result = new DownloadResult(element, false);
+				var startDownload = System.currentTimeMillis();
+				var result = new DownloadResult(element, false);
 				results.add(result);
-				final var fileOut = element.getFileOut();
+				var fileOut = element.getFileOut();
 				var downloaded = Files.exists(fileOut);
 				log.debug("Downloading file {}", element.getRemotePath());
 				progressBar.setExtraMessage(element.getSftpFile().getFilename());
 				if(!downloaded){
-					try(final var fos = Files.newOutputStream(element.getFileOut())){
+					try(var fos = Files.newOutputStream(element.getFileOut())){
 						connection.getSftpChannel().get(element.getRemotePath(), fos);
 						fos.flush();
 					}
-					catch(final IOException e){
+					catch(IOException e){
 						log.warn("IO - Error downloading file {}", element, e);
 						try{
 							Files.deleteIfExists(fileOut);
 						}
-						catch(final IOException ignored){
+						catch(IOException ignored){
 						}
 						continue;
 					}
-					catch(final SftpException e){
+					catch(SftpException e){
 						log.warn("SFTP - Error downloading file", e);
 						try{
 							Files.deleteIfExists(fileOut);
 						}
-						catch(final IOException ignored){
+						catch(IOException ignored){
 						}
 						if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed")){
 							connection.reopen();
@@ -80,8 +82,8 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 					}
 					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getSftpFile().getAttrs().getATime() * 1000L));
 					try{
-						final long fileLength = Files.size(fileOut);
-						final var expectedFileLength = element.getSftpFile().getAttrs().getSize();
+						long fileLength = Files.size(fileOut);
+						var expectedFileLength = element.getSftpFile().getAttrs().getSize();
 						if(expectedFileLength == fileLength){
 							downloaded = true;
 						}
@@ -89,7 +91,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 							log.warn("Sizes mismatch expected:{} actual:{} difference: {}", expectedFileLength, fileLength, fileLength - expectedFileLength);
 						}
 					}
-					catch(final IOException ignored){
+					catch(IOException ignored){
 					}
 				}
 				if(downloaded){
@@ -101,7 +103,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 							log.info("Deleting remote file {}", element.getRemotePath());
 							connection.getSftpChannel().rm(element.getRemotePath());
 						}
-						catch(final SftpException e){
+						catch(SftpException e){
 							log.error("Failed to delete remote file {} after a successful download", element.getRemotePath(), e);
 						}
 					}
@@ -116,7 +118,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 					try{
 						Thread.sleep(10_000);
 					}
-					catch(final InterruptedException e){
+					catch(InterruptedException e){
 						log.error("Error while sleeping", e);
 					}
 				}
@@ -126,16 +128,27 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 			try{
 				Thread.sleep(1000);
 			}
-			catch(final InterruptedException e){
+			catch(InterruptedException e){
 				log.error("Error sleeping", e);
 			}
 		}
 		return results;
 	}
 	
-	private boolean markDownloaded(final Collection<DownloadElement> elements){
+	private static void setAttributes(@NotNull Path path, @NotNull FileTime fileTime){
+		for(var attribute : Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime")){
+			try{
+				Files.setAttribute(path, attribute, fileTime);
+			}
+			catch(Exception e){
+				log.warn("Error setting file attributes for {}", path, e);
+			}
+		}
+	}
+	
+	private boolean markDownloaded(@NotNull Collection<DownloadElement> elements){
 		if(!elements.isEmpty()){
-			final var updated = database.setDownloaded(elements);
+			var updated = storage.setDownloaded(elements);
 			if(updated == elements.size()){
 				elements.clear();
 				return true;
@@ -145,26 +158,15 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		return true;
 	}
 	
-	private static void setAttributes(final Path path, final FileTime fileTime){
-		for(final var attribute : Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime")){
-			try{
-				Files.setAttribute(path, attribute, fileTime);
-			}
-			catch(final Exception e){
-				log.warn("Error setting file attributes for {}", path, e);
-			}
-		}
-	}
-	
 	public void close(){
-		this.stop = true;
+		stop = true;
 	}
 	
 	public void resume(){
-		this.pause = false;
+		pause = false;
 	}
 	
 	public void pause(){
-		this.pause = true;
+		pause = true;
 	}
 }
