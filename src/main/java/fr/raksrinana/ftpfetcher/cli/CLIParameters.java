@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @SuppressWarnings("FieldMayBeFinal")
 @NoArgsConstructor
@@ -29,5 +28,5 @@ public class CLIParameters{
 			"--database"
 	}, description = "The path to the database to store downloads to")
 	@Nullable
-	private Path databasePath = Paths.get("FTPFetcher.db");
+	private Path databasePath;
 }
