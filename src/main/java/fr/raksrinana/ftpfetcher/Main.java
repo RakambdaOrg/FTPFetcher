@@ -53,8 +53,8 @@ public class Main{
 			return;
 		}
 		
-		var lockFile = parameters.getDatabasePath()
-				.resolveSibling(parameters.getDatabasePath().getFileName() + ".lock")
+		var lockFile = Paths.get(System.getProperty("java.io.tmpdir"))
+				.resolve("FTPFetcher.lock")
 				.normalize()
 				.toAbsolutePath();
 		if(Files.exists(lockFile)){
