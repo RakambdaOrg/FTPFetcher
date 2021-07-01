@@ -16,7 +16,7 @@ import fr.raksrinana.ftpfetcher.storage.IStorage;
 import fr.raksrinana.ftpfetcher.storage.NoOpStorage;
 import fr.raksrinana.utils.base.FileUtils;
 import lombok.extern.log4j.Log4j2;
-import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
@@ -120,31 +120,45 @@ public class Main{
 		log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(r -> r.getSftpFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
 		var startDownload = System.currentTimeMillis();
 		executor = Executors.newFixedThreadPool(parameters.getThreadCount());
-		List<Future<Collection<DownloadResult>>> futures = new ArrayList<>();
-		List<DownloadResult> results;
-		try(var progressBar = new ProgressBar("", downloadElements.size())){
-			var progressBarHandler = new ProgressBarHandler(progressBar);
-			try{
-				futures = IntStream.range(0, parameters.getThreadCount()).mapToObj(i -> {
-					var fetcher = new FTPFetcher(jsch, settings, storage, downloadElements, progressBarHandler);
-					consoleHandler.addFetcher(fetcher);
-					return fetcher;
-				}).map(executor::submit).collect(Collectors.toList());
-			}
-			catch(Exception e){
-				log.error("Error building fetchers", e);
-			}
+		var futures = new ArrayList<Future<Collection<DownloadResult>>>();
+		var results = new LinkedList<DownloadResult>();
+		
+		try(var closingStack = new ClosingStack()){
+			IntStream.range(0, parameters.getThreadCount())
+					.mapToObj(i -> {
+						var progressBarBuilder = new ProgressBarBuilder()
+								.setInitialMax(downloadElements.size())
+								.setTaskName("Downloader #" + i);
+						var progressBar = closingStack.add(progressBarBuilder.build());
+						var progressBarHandler = new ProgressBarHandler(progressBar);
+						
+						var fetcher = new FTPFetcher(jsch, settings, storage, downloadElements, progressBarHandler);
+						consoleHandler.addFetcher(fetcher);
+						return fetcher;
+					})
+					.map(executor::submit)
+					.forEach(futures::add);
+			
 			executor.shutdown();
-			results = futures.parallelStream().filter(Objects::nonNull).map(f -> {
-				try{
-					return f.get();
-				}
-				catch(InterruptedException | ExecutionException e){
-					log.error("Error waiting for fetcher", e);
-				}
-				return null;
-			}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
+			futures.parallelStream()
+					.filter(Objects::nonNull)
+					.map(f -> {
+						try{
+							return f.get();
+						}
+						catch(InterruptedException | ExecutionException e){
+							log.error("Error waiting for fetcher", e);
+						}
+						return null;
+					})
+					.filter(Objects::nonNull)
+					.flatMap(Collection::stream)
+					.forEach(results::add);
 		}
+		catch(ClosingStack.ClosingException e){
+			log.error("Error while closing progress bars", e);
+		}
+		
 		var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 		log.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getSftpFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 	}

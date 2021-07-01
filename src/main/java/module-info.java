@@ -15,5 +15,5 @@ open module fr.raksrinana.ftpfetcher {
 	requires com.fasterxml.jackson.annotation;
 	requires com.fasterxml.jackson.databind;
 	requires static lombok;
-	requires static annotations;
+	requires static org.jetbrains.annotations;
 }
