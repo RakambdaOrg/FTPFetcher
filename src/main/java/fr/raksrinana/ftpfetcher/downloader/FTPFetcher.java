@@ -15,7 +15,10 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
 @Log4j2
@@ -23,13 +26,13 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private static final int MARK_DOWNLOADED_THRESHOLD = 25;
 	private final Settings settings;
 	private final IStorage storage;
-	private final Queue<DownloadElement> downloadElements;
+	private final Collection<DownloadElement> downloadElements;
 	private final JSch jsch;
 	private final ProgressBarHandler progressBar;
 	private boolean stop;
 	private boolean pause;
 	
-	public FTPFetcher(@NotNull JSch jsch, @NotNull Settings settings, @NotNull IStorage storage, @NotNull Queue<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
+	public FTPFetcher(@NotNull JSch jsch, @NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
 		this.jsch = jsch;
 		this.settings = settings;
 		this.storage = storage;
@@ -45,8 +48,11 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		var results = new LinkedList<DownloadResult>();
 		var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
 		try(var connection = new FTPConnection(jsch, settings)){
-			DownloadElement element;
-			while(!stop && (element = downloadElements.poll()) != null){
+			downloadElements.forEach(element -> {
+				if(stop){
+					throw new StopDownloaderException("Executor stopped");
+				}
+				
 				var startDownload = System.currentTimeMillis();
 				var result = new DownloadResult(element, false);
 				results.add(result);
@@ -66,7 +72,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						}
 						catch(IOException ignored){
 						}
-						continue;
+						return;
 					}
 					catch(SftpException e){
 						log.warn("SFTP - Error downloading file", e);
@@ -76,14 +82,19 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						catch(IOException ignored){
 						}
 						if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed")){
-							connection.reopen();
+							try{
+								connection.reopen();
+							}
+							catch(JSchException ex){
+								throw new RuntimeException(e);
+							}
 						}
-						continue;
+						return;
 					}
 					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getSftpFile().getAttrs().getATime() * 1000L));
 					try{
 						long fileLength = Files.size(fileOut);
-						var expectedFileLength = element.getSftpFile().getAttrs().getSize();
+						var expectedFileLength = element.getFileSize();
 						if(expectedFileLength == fileLength){
 							downloaded = true;
 						}
@@ -107,7 +118,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 							log.error("Failed to delete remote file {} after a successful download", element.getRemotePath(), e);
 						}
 					}
-					progressBar.step();
+					progressBar.stepBy(element.getFileSize());
 				}
 				if(toMarkDownloaded.size() >= MARK_DOWNLOADED_THRESHOLD){
 					markDownloaded(toMarkDownloaded);
@@ -122,7 +133,10 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						log.error("Error while sleeping", e);
 					}
 				}
-			}
+			});
+		}
+		catch(StopDownloaderException e){
+			//skip
 		}
 		while(!markDownloaded(toMarkDownloaded)){
 			try{

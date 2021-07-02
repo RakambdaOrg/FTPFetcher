@@ -18,6 +18,12 @@ public class ProgressBarHandler{
 		}
 	}
 	
+	public void stepBy(long n){
+		synchronized(stepLock){
+			progressBar.stepBy(n);
+		}
+	}
+	
 	public void setExtraMessage(String s){
 		progressBar.setExtraMessage(s);
 	}

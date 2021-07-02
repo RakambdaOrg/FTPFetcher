@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.bundles.raksrinanaUtils)
 
     implementation(libs.commonsIo)
+    implementation(libs.commonsCollections)
     implementation(libs.progressbar)
 
     implementation(libs.picocli)

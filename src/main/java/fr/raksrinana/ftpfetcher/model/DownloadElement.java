@@ -19,10 +19,12 @@ public class DownloadElement{
 	private boolean deleteOnSuccess;
 	@Setter
 	private LocalDateTime downloadedAt;
+	private long fileSize;
 	
 	public DownloadElement(@NotNull String folder, @NotNull ChannelSftp.LsEntry sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.sftpFile = sftpFile;
+		fileSize = sftpFile.getAttrs().getSize();
 		remotePath = folder + sftpFile.getFilename();
 		this.fileOut = fileOut;
 		this.deleteOnSuccess = deleteOnSuccess;

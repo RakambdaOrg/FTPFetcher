@@ -17,6 +17,7 @@ import fr.raksrinana.ftpfetcher.storage.NoOpStorage;
 import fr.raksrinana.utils.base.FileUtils;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBarBuilder;
+import org.apache.commons.collections4.ListUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
@@ -28,10 +29,12 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Log4j2
@@ -87,7 +90,7 @@ public class Main{
 				log.info("Removed {} useless entries", deletedUseless);
 				
 				var startFetch = System.currentTimeMillis();
-				var downloadSet = new ConcurrentLinkedQueue<DownloadElement>();
+				var downloadSet = new LinkedList<DownloadElement>();
 				for(var folderSettings : settings.getFolders()){
 					try(var connection = new FTPConnection(jsch, settings)){
 						downloadSet.addAll(fetchFolder(storage, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess()));
@@ -116,23 +119,25 @@ public class Main{
 		consoleHandler.close();
 	}
 	
-	private static void downloadElements(@NotNull CLIParameters parameters, @NotNull JSch jsch, @NotNull Settings settings, @NotNull IStorage storage, @NotNull Queue<DownloadElement> downloadElements){
-		log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(r -> r.getSftpFile().getAttrs().getSize()).sum()), parameters.getThreadCount());
+	private static void downloadElements(@NotNull CLIParameters parameters, @NotNull JSch jsch, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements){
+		log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(DownloadElement::getFileSize).sum()), parameters.getThreadCount());
 		var startDownload = System.currentTimeMillis();
 		executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 		var futures = new ArrayList<Future<Collection<DownloadResult>>>();
 		var results = new LinkedList<DownloadResult>();
 		
+		var lists = ListUtils.partition(downloadElements, (int) Math.ceil(downloadElements.size() / (float) parameters.getThreadCount()));
+		
 		try(var closingStack = new ClosingStack()){
-			IntStream.range(0, parameters.getThreadCount())
-					.mapToObj(i -> {
+			lists.stream()
+					.map(list -> {
 						var progressBarBuilder = new ProgressBarBuilder()
-								.setInitialMax(downloadElements.size())
-								.setTaskName("Downloader #" + i);
+								.setInitialMax(list.stream().mapToLong(DownloadElement::getFileSize).sum())
+								.setUnit("Bytes", 1);
 						var progressBar = closingStack.add(progressBarBuilder.build());
 						var progressBarHandler = new ProgressBarHandler(progressBar);
 						
-						var fetcher = new FTPFetcher(jsch, settings, storage, downloadElements, progressBarHandler);
+						var fetcher = new FTPFetcher(jsch, settings, storage, list, progressBarHandler);
 						consoleHandler.addFetcher(fetcher);
 						return fetcher;
 					})
@@ -160,7 +165,7 @@ public class Main{
 		}
 		
 		var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
-		log.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getSftpFile().getAttrs().getSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
+		log.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFileSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 	}
 	
 	private static int removeUselessDownloadsInDb(@NotNull IStorage storage){

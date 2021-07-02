@@ -9,6 +9,7 @@ raksrinana-utils-version = "15.0.3"
 commons-io-version = "2.8.0"
 progressbar-version = "0.9.2"
 jetbrains-annotations-version = "21.0.1"
+commons-collections-version = "4.4"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
@@ -22,6 +23,7 @@ jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-datab
 raksrinana-utils-base = { group = "fr.raksrinana", name = "utils.base", version.ref = "raksrinana-utils-version" }
 raksrinana-utils-config = { group = "fr.raksrinana", name = "utils.config", version.ref = "raksrinana-utils-version" }
 commonsIo = { group = "commons-io", name = "commons-io", version.ref = "commons-io-version" }
+commonsCollections = { group = "org.apache.commons", name = "commons-collections4", version.ref = "commons-collections-version" }
 progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progressbar-version" }
 jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations-version" }
 

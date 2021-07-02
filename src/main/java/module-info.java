@@ -4,6 +4,7 @@ open module fr.raksrinana.ftpfetcher {
 	requires fr.raksrinana.utils.config;
 	requires info.picocli;
 	requires org.apache.commons.io;
+	requires org.apache.commons.collections4;
 	requires progressbar;
 	requires org.slf4j;
 	requires org.apache.logging.log4j;
