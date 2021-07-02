@@ -111,7 +111,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 					toMarkDownloaded.add(element);
 					if(element.isDeleteOnSuccess()){
 						try{
-							log.info("Deleting remote file {}", element.getRemotePath());
+							log.debug("Deleting remote file {}", element.getRemotePath());
 							connection.getSftpChannel().rm(element.getRemotePath());
 						}
 						catch(SftpException e){
