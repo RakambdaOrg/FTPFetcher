@@ -133,7 +133,7 @@ public class Main{
 					.map(list -> {
 						var progressBarBuilder = new ProgressBarBuilder()
 								.setInitialMax(list.stream().mapToLong(DownloadElement::getFileSize).sum())
-								.setUnit("Bytes", 1);
+								.setUnit("MiB", 1048576);
 						var progressBar = closingStack.add(progressBarBuilder.build());
 						var progressBarHandler = new ProgressBarHandler(progressBar);
 						
