@@ -17,7 +17,6 @@ import fr.raksrinana.ftpfetcher.storage.NoOpStorage;
 import fr.raksrinana.utils.base.FileUtils;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBarBuilder;
-import org.apache.commons.collections4.ListUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
@@ -33,8 +32,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Log4j2
@@ -126,7 +127,7 @@ public class Main{
 		var futures = new ArrayList<Future<Collection<DownloadResult>>>();
 		var results = new LinkedList<DownloadResult>();
 		
-		var lists = ListUtils.partition(downloadElements, (int) Math.ceil(downloadElements.size() / (float) parameters.getThreadCount()));
+		var lists = split(downloadElements, (int) Math.ceil(downloadElements.size() / (float) parameters.getThreadCount()), DownloadElement::getFileSize);
 		
 		try(var closingStack = new ClosingStack()){
 			lists.stream()
@@ -166,6 +167,15 @@ public class Main{
 		
 		var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
 		log.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFileSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
+	}
+	
+	private static <T> List<SumSplitCollection<T>> split(List<T> elements, int partCount, Function<T, Long> propertyExtractor){
+		var parts = new ArrayList<SumSplitCollection<T>>();
+		IntStream.range(0, partCount).forEach(i -> parts.add(new SumSplitCollection<>(propertyExtractor)));
+		
+		elements.forEach(element -> parts.stream().sorted().findFirst().ifPresent(part -> part.add(element)));
+		
+		return parts;
 	}
 	
 	private static int removeUselessDownloadsInDb(@NotNull IStorage storage){
