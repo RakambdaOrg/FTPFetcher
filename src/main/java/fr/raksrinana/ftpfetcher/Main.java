@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -130,9 +131,11 @@ public class Main{
 		var lists = split(downloadElements, (int) Math.ceil(downloadElements.size() / (float) parameters.getThreadCount()), DownloadElement::getFileSize);
 		
 		try(var closingStack = new ClosingStack()){
+			var count = new AtomicInteger(0);
 			lists.stream()
 					.map(list -> {
 						var progressBarBuilder = new ProgressBarBuilder()
+								.setTaskName("Downloader #" + count.incrementAndGet())
 								.setInitialMax(list.stream().mapToLong(DownloadElement::getFileSize).sum())
 								.setUnit("MiB", 1048576);
 						var progressBar = closingStack.add(progressBarBuilder.build());
@@ -169,7 +172,7 @@ public class Main{
 		log.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFileSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 	}
 	
-	private static <T> List<SumSplitCollection<T>> split(List<T> elements, int partCount, Function<T, Long> propertyExtractor){
+	private static <T> List<SumSplitCollection<T>> split(Collection<T> elements, int partCount, Function<T, Long> propertyExtractor){
 		var parts = new ArrayList<SumSplitCollection<T>>();
 		IntStream.range(0, partCount).forEach(i -> parts.add(new SumSplitCollection<>(propertyExtractor)));
 		
