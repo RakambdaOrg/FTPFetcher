@@ -128,7 +128,7 @@ public class Main{
 		var futures = new ArrayList<Future<Collection<DownloadResult>>>();
 		var results = new LinkedList<DownloadResult>();
 		
-		var lists = split(downloadElements, (int) Math.ceil(downloadElements.size() / (float) parameters.getThreadCount()), DownloadElement::getFileSize);
+		var lists = split(downloadElements, parameters.getThreadCount(), DownloadElement::getFileSize);
 		
 		try(var closingStack = new ClosingStack()){
 			var count = new AtomicInteger(0);
