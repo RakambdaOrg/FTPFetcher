@@ -8,7 +8,7 @@ jackson-version = "2.13.0"
 raksrinana-utils-version = "15.0.3"
 commons-io-version = "2.11.0"
 progressbar-version = "0.9.2"
-jetbrains-annotations-version = "21.0.1"
+jetbrains-annotations-version = "23.0.0"
 commons-collections-version = "4.4"
 
 [libraries]
