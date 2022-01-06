@@ -48,7 +48,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		var results = new LinkedList<DownloadResult>();
 		var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
 		try(var connection = new FTPConnection(jsch, settings)){
-			downloadElements.forEach(element -> {
+			for(var element : downloadElements){
 				if(stop){
 					throw new StopDownloaderException("Executor stopped");
 				}
@@ -72,7 +72,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						}
 						catch(IOException ignored){
 						}
-						return;
+						continue;
 					}
 					catch(SftpException e){
 						log.warn("SFTP - Error downloading file", e);
@@ -89,7 +89,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 								throw new RuntimeException(e);
 							}
 						}
-						return;
+						continue;
 					}
 					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getSftpFile().getAttrs().getATime() * 1000L));
 					try{
@@ -133,7 +133,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						log.error("Error while sleeping", e);
 					}
 				}
-			});
+			}
 		}
 		catch(StopDownloaderException e){
 			//skip

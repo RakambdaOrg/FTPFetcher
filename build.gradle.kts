@@ -2,9 +2,9 @@ plugins {
     idea
     java
     application
-    id("com.github.johnrengelman.shadow") version ("7.0.0")
-    id("com.github.ben-manes.versions") version ("0.39.0")
-    id("io.freefair.lombok") version ("6.0.0-m2")
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.names)
+    alias(libs.plugins.lombok)
 }
 
 group = "fr.raksrinana"
@@ -43,7 +43,6 @@ repositories {
         }
     }
     mavenCentral()
-    jcenter()
 }
 
 tasks {
@@ -88,12 +87,11 @@ application {
     val moduleName: String by project
     val className: String by project
 
-    mainClassName = className
     mainModule.set(moduleName)
     mainClass.set(className)
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
