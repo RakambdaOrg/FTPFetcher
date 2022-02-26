@@ -186,16 +186,18 @@ public class Main{
 	@NotNull
 	private static Collection<? extends DownloadElement> fetchFolder(@NotNull IStorage storage, @NotNull FTPConnection connection, @NotNull String folder, @NotNull Path outPath, boolean recursive, @NotNull Pattern fileFilter, boolean deleteOnSuccess) throws SQLException, IOException{
 		log.info("Fetching folder {}", folder);
+		if(Objects.isNull(connection.getSftp().statExistence(folder))){
+			log.warn("Input path {} does not exists", folder);
+			return List.of();
+		}
 		var files = connection.getSftp().ls(folder);
 		log.info("Fetched folder {}, {} elements found, verifying them", folder, files.size());
-		var toDL = storage.getOnlyNotDownloaded(folder, files).stream()
-				.sorted(Comparator.comparing(RemoteResourceInfo::getName))
-				.filter(f -> {
-					if(f.getName().equals(".") || f.getName().equals("..")){
-						return false;
-					}
-					if(f.isDirectory()){
-						return true;
+		var toDL = storage.getOnlyNotDownloaded(folder, files).stream().sorted(Comparator.comparing(RemoteResourceInfo::getName)).filter(f -> {
+			if(f.getName().equals(".") || f.getName().equals("..")){
+				return false;
+			}
+			if(f.isDirectory()){
+				return true;
 					}
 					return true;
 				}).flatMap(f -> {
