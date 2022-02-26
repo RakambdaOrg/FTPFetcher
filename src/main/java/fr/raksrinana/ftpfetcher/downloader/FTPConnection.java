@@ -30,7 +30,7 @@ public class FTPConnection implements AutoCloseable{
 		ssh.authPassword(settings.getFtpUser(), settings.getFtpPass());
 		
 		sftp = ssh.newSFTPClient();
-		sftp.getFileTransfer().setPreserveAttributes(true);
+		sftp.getFileTransfer().setPreserveAttributes(false);
 	}
 	
 	@Override

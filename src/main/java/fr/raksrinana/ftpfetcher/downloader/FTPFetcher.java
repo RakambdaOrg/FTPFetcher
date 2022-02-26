@@ -5,16 +5,15 @@ import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.ftpfetcher.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
+import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.xfer.FileSystemFile;
+import net.schmizz.sshj.xfer.LocalDestFile;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
@@ -58,7 +57,9 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				progressBar.setExtraMessage(element.getSftpFile().getName());
 				if(!downloaded){
 					try{
-						connection.getSftp().get(element.getRemotePath(), new FileSystemFile(element.getFileOut().toFile()));
+						var dest = new FileSystemFile(element.getFileOut().toFile());
+						connection.getSftp().get(element.getRemotePath(), dest);
+						setAttributes(element, dest);
 					}
 					catch(IOException e){
 						log.warn("IO - Error downloading file {}", element, e);
@@ -69,7 +70,6 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						}
 						continue;
 					}
-					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getSftpFile().getAttributes().getAtime() * 1000L));
 					try{
 						long fileLength = Files.size(fileOut);
 						var expectedFileLength = element.getFileSize();
@@ -127,14 +127,16 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		return results;
 	}
 	
-	private static void setAttributes(@NotNull Path path, @NotNull FileTime fileTime){
-		for(var attribute : Arrays.asList("creationTime", "lastAccessTime", "lastModifiedTime")){
-			try{
-				Files.setAttribute(path, attribute, fileTime);
+	private static void setAttributes(@NotNull DownloadElement element, @NotNull LocalDestFile dest){
+		try{
+			var attrs = element.getAttributes();
+			if(attrs.has(FileAttributes.Flag.ACMODTIME)){
+				dest.setLastAccessedTime(attrs.getAtime());
+				dest.setLastModifiedTime(attrs.getMtime());
 			}
-			catch(Exception e){
-				log.warn("Error setting file attributes for {}", path, e);
-			}
+		}
+		catch(Exception e){
+			log.warn("Error setting file attributes for {}", element.getFileOut(), e);
 		}
 	}
 	

@@ -3,6 +3,7 @@ package fr.raksrinana.ftpfetcher.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
@@ -19,12 +20,12 @@ public class DownloadElement{
 	private boolean deleteOnSuccess;
 	@Setter
 	private LocalDateTime downloadedAt;
-	private long fileSize;
+	private FileAttributes attributes;
 	
 	public DownloadElement(@NotNull String folder, @NotNull RemoteResourceInfo sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.sftpFile = sftpFile;
-		fileSize = sftpFile.getAttributes().getSize();
+		attributes = sftpFile.getAttributes();
 		remotePath = folder + sftpFile.getName();
 		this.fileOut = fileOut;
 		this.deleteOnSuccess = deleteOnSuccess;
@@ -51,5 +52,13 @@ public class DownloadElement{
 	@Override
 	public String toString(){
 		return getRemotePath();
+	}
+	
+	public FileAttributes getAttributes(){
+		return attributes;
+	}
+	
+	public long getFileSize(){
+		return attributes.getSize();
 	}
 }
