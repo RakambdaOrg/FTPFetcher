@@ -2,7 +2,7 @@
 slf4j-version = "2.0.0-alpha6"
 log4j2-version = "2.17.1"
 log4j2-slf4j-version = "2.17.1"
-jsch-version = "0.1.55"
+sshj-version = "0.32.0"
 picocli-version = "4.6.3"
 jackson-version = "2.13.1"
 raksrinana-utils-version = "15.0.3"
@@ -19,7 +19,7 @@ lombok-version = "6.4.1"
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
 log4j2-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j2-version" }
 log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j18-impl", version.ref = "log4j2-slf4j-version" }
-jsch = { group = "com.jcraft", name = "jsch", version.ref = "jsch-version" }
+sshj = { group = "com.hierynomus", name = "sshj", version.ref = "sshj-version" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-version" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson-version" }
 jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson-version" }

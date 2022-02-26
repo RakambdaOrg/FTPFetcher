@@ -1,13 +1,12 @@
 package fr.raksrinana.ftpfetcher.downloader;
 
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.SftpException;
 import fr.raksrinana.ftpfetcher.cli.Settings;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.ftpfetcher.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
+import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.xfer.FileSystemFile;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,13 +26,13 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private final Settings settings;
 	private final IStorage storage;
 	private final Collection<DownloadElement> downloadElements;
-	private final JSch jsch;
+	private final SSHClient sshClient;
 	private final ProgressBarHandler progressBar;
 	private boolean stop;
 	private boolean pause;
 	
-	public FTPFetcher(@NotNull JSch jsch, @NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
-		this.jsch = jsch;
+	public FTPFetcher(@NotNull SSHClient sshClient, @NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
+		this.sshClient = sshClient;
 		this.settings = settings;
 		this.storage = storage;
 		this.downloadElements = downloadElements;
@@ -44,10 +43,10 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	
 	@Override
 	@NotNull
-	public Collection<DownloadResult> call() throws JSchException{
+	public Collection<DownloadResult> call() throws IOException{
 		var results = new LinkedList<DownloadResult>();
 		var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
-		try(var connection = new FTPConnection(jsch, settings)){
+		try(var connection = new FTPConnection(sshClient, settings)){
 			for(var element : downloadElements){
 				if(stop){
 					throw new StopDownloaderException("Executor stopped");
@@ -59,11 +58,10 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				var fileOut = element.getFileOut();
 				var downloaded = Files.exists(fileOut);
 				log.debug("Downloading file {}", element.getRemotePath());
-				progressBar.setExtraMessage(element.getSftpFile().getFilename());
+				progressBar.setExtraMessage(element.getSftpFile().getName());
 				if(!downloaded){
-					try(var fos = Files.newOutputStream(element.getFileOut())){
-						connection.getSftpChannel().get(element.getRemotePath(), fos);
-						fos.flush();
+					try{
+						connection.getSftp().get(element.getRemotePath(), new FileSystemFile(element.getFileOut().toFile()));
 					}
 					catch(IOException e){
 						log.warn("IO - Error downloading file {}", element, e);
@@ -74,24 +72,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						}
 						continue;
 					}
-					catch(SftpException e){
-						log.warn("SFTP - Error downloading file", e);
-						try{
-							Files.deleteIfExists(fileOut);
-						}
-						catch(IOException ignored){
-						}
-						if(e.getCause().getMessage().contains("inputstream is closed") || e.getCause().getMessage().contains("Pipe closed")){
-							try{
-								connection.reopen();
-							}
-							catch(JSchException ex){
-								throw new RuntimeException(e);
-							}
-						}
-						continue;
-					}
-					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getSftpFile().getAttrs().getATime() * 1000L));
+					setAttributes(element.getFileOut(), FileTime.fromMillis(element.getSftpFile().getAttributes().getAtime() * 1000L));
 					try{
 						long fileLength = Files.size(fileOut);
 						var expectedFileLength = element.getFileSize();
@@ -112,9 +93,9 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 					if(element.isDeleteOnSuccess()){
 						try{
 							log.debug("Deleting remote file {}", element.getRemotePath());
-							connection.getSftpChannel().rm(element.getRemotePath());
+							connection.getSftp().rm(element.getRemotePath());
 						}
-						catch(SftpException e){
+						catch(IOException e){
 							log.error("Failed to delete remote file {} after a successful download", element.getRemotePath(), e);
 						}
 					}

@@ -11,7 +11,7 @@ open module fr.raksrinana.ftpfetcher {
 	requires org.apache.logging.log4j.core;
 	requires org.apache.logging.log4j.slf4j;
 	requires java.scripting;
-	requires jsch;
+	requires com.hierynomus.sshj;
 	requires com.fasterxml.jackson.core;
 	requires com.fasterxml.jackson.annotation;
 	requires com.fasterxml.jackson.databind;

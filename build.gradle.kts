@@ -11,10 +11,7 @@ group = "fr.raksrinana"
 description = "FTPFetcher"
 
 dependencies {
-    implementation(libs.jsch) {
-        exclude(module = "commons-io")
-        exclude(module = "commons-lang3")
-    }
+    implementation(libs.sshj)
 
     implementation(libs.slf4j)
     implementation(libs.bundles.log4j2)
@@ -59,8 +56,12 @@ tasks {
 
         doFirst {
             val compilerArgs = options.compilerArgs
+
+            val path = classpath.asPath.split(";")
+                .filter { it.endsWith(".jar") }
+                .joinToString(";")
             compilerArgs.add("--module-path")
-            compilerArgs.add(classpath.asPath)
+            compilerArgs.add(path)
             classpath = files()
         }
     }
@@ -94,4 +95,6 @@ application {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+
+    modularity.inferModulePath.set(false)
 }

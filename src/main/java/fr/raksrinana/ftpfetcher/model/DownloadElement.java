@@ -1,9 +1,9 @@
 package fr.raksrinana.ftpfetcher.model;
 
-import com.jcraft.jsch.ChannelSftp;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -13,7 +13,7 @@ import java.util.Objects;
 @Getter
 public class DownloadElement{
 	private String folder;
-	private ChannelSftp.LsEntry sftpFile;
+	private RemoteResourceInfo sftpFile;
 	private Path fileOut;
 	private String remotePath;
 	private boolean deleteOnSuccess;
@@ -21,11 +21,11 @@ public class DownloadElement{
 	private LocalDateTime downloadedAt;
 	private long fileSize;
 	
-	public DownloadElement(@NotNull String folder, @NotNull ChannelSftp.LsEntry sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt){
+	public DownloadElement(@NotNull String folder, @NotNull RemoteResourceInfo sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.sftpFile = sftpFile;
-		fileSize = sftpFile.getAttrs().getSize();
-		remotePath = folder + sftpFile.getFilename();
+		fileSize = sftpFile.getAttributes().getSize();
+		remotePath = folder + sftpFile.getName();
 		this.fileOut = fileOut;
 		this.deleteOnSuccess = deleteOnSuccess;
 		this.downloadedAt = downloadedAt;

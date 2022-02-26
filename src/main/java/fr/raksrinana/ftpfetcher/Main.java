@@ -1,9 +1,5 @@
 package fr.raksrinana.ftpfetcher;
 
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.SftpException;
 import fr.raksrinana.ftpfetcher.cli.CLIParameters;
 import fr.raksrinana.ftpfetcher.cli.Settings;
 import fr.raksrinana.ftpfetcher.downloader.FTPConnection;
@@ -17,6 +13,8 @@ import fr.raksrinana.ftpfetcher.storage.NoOpStorage;
 import fr.raksrinana.utils.base.FileUtils;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBarBuilder;
+import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
@@ -27,7 +25,12 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -83,10 +86,9 @@ public class Main{
 		consoleHandler.start();
 		Settings.loadSettings(parameters.getProperties()).ifPresentOrElse(settings -> {
 			try(var storage = getStorage(parameters)){
-				JSch.setConfig("StrictHostKeyChecking", "no");
-				var jsch = new JSch();
+				var sshClient = new SSHClient();
 				var knownHostsFilename = FileUtils.getHomeFolder().resolve(".ssh").resolve("known_hosts");
-				jsch.setKnownHosts(knownHostsFilename.toAbsolutePath().toString());
+				sshClient.loadKnownHosts(knownHostsFilename.toFile());
 				
 				var deletedUseless = removeUselessDownloadsInDb(storage);
 				log.info("Removed {} useless entries", deletedUseless);
@@ -94,16 +96,11 @@ public class Main{
 				var startFetch = System.currentTimeMillis();
 				var downloadSet = new LinkedList<DownloadElement>();
 				for(var folderSettings : settings.getFolders()){
-					try(var connection = new FTPConnection(jsch, settings)){
+					try(var connection = new FTPConnection(sshClient, settings)){
 						downloadSet.addAll(fetchFolder(storage, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess()));
 					}
-					catch(JSchException | SftpException e){
-						if(e.getMessage().equals("No such file")){
-							log.warn("Folder {} doesn't exist", folderSettings.getFtpFolder());
-						}
-						else{
-							log.error("Error fetching folder {}", folderSettings.getFtpFolder(), e);
-						}
+					catch(IOException e){
+						log.error("Error fetching folder {}", folderSettings.getFtpFolder(), e);
 					}
 					catch(Exception e){
 						log.error("Error fetching folder {}", folderSettings, e);
@@ -111,7 +108,7 @@ public class Main{
 				}
 				log.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 				if(!downloadSet.isEmpty()){
-					downloadElements(parameters, jsch, settings, storage, downloadSet);
+					downloadElements(parameters, sshClient, settings, storage, downloadSet);
 				}
 			}
 			catch(Exception e){
@@ -121,7 +118,7 @@ public class Main{
 		consoleHandler.close();
 	}
 	
-	private static void downloadElements(@NotNull CLIParameters parameters, @NotNull JSch jsch, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements){
+	private static void downloadElements(@NotNull CLIParameters parameters, @NotNull SSHClient sshClient, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements){
 		log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(DownloadElement::getFileSize).sum()), parameters.getThreadCount());
 		var startDownload = System.currentTimeMillis();
 		executor = Executors.newFixedThreadPool(parameters.getThreadCount());
@@ -141,7 +138,7 @@ public class Main{
 						var progressBar = closingStack.add(progressBarBuilder.build());
 						var progressBarHandler = new ProgressBarHandler(progressBar);
 						
-						var fetcher = new FTPFetcher(jsch, settings, storage, list, progressBarHandler);
+						var fetcher = new FTPFetcher(sshClient, settings, storage, list, progressBarHandler);
 						consoleHandler.addFetcher(fetcher);
 						return fetcher;
 					})
@@ -168,7 +165,7 @@ public class Main{
 			log.error("Error while closing progress bars", e);
 		}
 		
-		var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).collect(Collectors.toList());
+		var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).toList();
 		log.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFileSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
 	}
 	
@@ -192,32 +189,32 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Collection<? extends DownloadElement> fetchFolder(@NotNull IStorage storage, @NotNull FTPConnection connection, @NotNull String folder, @NotNull Path outPath, boolean recursive, @NotNull Pattern fileFilter, boolean deleteOnSuccess) throws SftpException, SQLException{
+	private static Collection<? extends DownloadElement> fetchFolder(@NotNull IStorage storage, @NotNull FTPConnection connection, @NotNull String folder, @NotNull Path outPath, boolean recursive, @NotNull Pattern fileFilter, boolean deleteOnSuccess) throws SQLException, IOException{
 		log.info("Fetching folder {}", folder);
-		var array = connection.getSftpChannel().ls(folder).toArray();
-		log.info("Fetched folder {}, {} elements found, verifying them", folder, array.length);
-		var toDL = storage.getOnlyNotDownloaded(folder, Arrays.stream(array).map(o -> (ChannelSftp.LsEntry) o).collect(Collectors.toList())).stream()
-				.sorted(Comparator.comparing(ChannelSftp.LsEntry::getFilename))
+		var files = connection.getSftp().ls(folder);
+		log.info("Fetched folder {}, {} elements found, verifying them", folder, files.size());
+		var toDL = storage.getOnlyNotDownloaded(folder, files).stream()
+				.sorted(Comparator.comparing(RemoteResourceInfo::getName))
 				.filter(f -> {
-					if(f.getFilename().equals(".") || f.getFilename().equals("..")){
+					if(f.getName().equals(".") || f.getName().equals("..")){
 						return false;
 					}
-					if(f.getAttrs().isDir()){
+					if(f.isDirectory()){
 						return true;
 					}
 					return true;
 				}).flatMap(f -> {
 					try{
-						if(recursive && f.getAttrs().isDir()){
-							return fetchFolder(storage, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getFilename() + "/", outPath.resolve(f.getFilename()), true, fileFilter, deleteOnSuccess).stream();
+						if(recursive && f.isDirectory()){
+							return fetchFolder(storage, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getName() + "/", outPath.resolve(f.getName()), true, fileFilter, deleteOnSuccess).stream();
 						}
-						if(!f.getAttrs().isDir() && fileFilter.matcher(f.getFilename()).matches()){
+						if(!f.isDirectory() && fileFilter.matcher(f.getName()).matches()){
 							return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess));
 						}
 						return Stream.empty();
 					}
 					catch(Exception e){
-						log.error("Error fetching folder {}", f.getLongname(), e);
+						log.error("Error fetching folder {}/{}", f.getPath(), f.getName(), e);
 					}
 					return null;
 				}).filter(Objects::nonNull).collect(Collectors.toList());
@@ -226,8 +223,8 @@ public class Main{
 	}
 	
 	@Nullable
-	private static DownloadElement createDownload(@NotNull String folder, @NotNull ChannelSftp.LsEntry file, @NotNull Path folderOut, boolean deleteOnSuccess) throws IOException{
-		var fileOut = folderOut.resolve(file.getFilename());
+	private static DownloadElement createDownload(@NotNull String folder, @NotNull RemoteResourceInfo file, @NotNull Path folderOut, boolean deleteOnSuccess) throws IOException{
+		var fileOut = folderOut.resolve(file.getName());
 		if(Files.exists(fileOut)){
 			return null;
 		}

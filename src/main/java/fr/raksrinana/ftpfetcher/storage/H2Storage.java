@@ -1,11 +1,11 @@
 package fr.raksrinana.ftpfetcher.storage;
 
-import com.jcraft.jsch.ChannelSftp;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.utils.config.H2Manager;
 import fr.raksrinana.utils.config.PreparedStatementFiller;
 import fr.raksrinana.utils.config.SQLValue;
 import lombok.extern.log4j.Log4j2;
+import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,11 +24,11 @@ public class H2Storage extends H2Manager implements IStorage{
 	}
 	
 	@NotNull
-	public Collection<ChannelSftp.LsEntry> getOnlyNotDownloaded(@NotNull String folder, @NotNull Collection<ChannelSftp.LsEntry> entries) throws SQLException{
-		var files = new HashMap<String, ChannelSftp.LsEntry>();
+	public Collection<RemoteResourceInfo> getOnlyNotDownloaded(@NotNull String folder, @NotNull Collection<RemoteResourceInfo> entries) throws SQLException{
+		var files = new HashMap<String, RemoteResourceInfo>();
 		for(var entry : entries){
 			files.put(Paths.get(folder)
-							.resolve(entry.getFilename().replace(":", "."))
+							.resolve(entry.getName().replace(":", "."))
 							.toString()
 							.replace("\\", "/"),
 					entry);
