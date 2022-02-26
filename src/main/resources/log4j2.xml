@@ -19,6 +19,10 @@
         </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger level="warn" name="net.schmizz.sshj" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+        </Logger>
         <Root level="info" additivity="false">
             <AppenderRef ref="console"/>
             <AppenderRef ref="file"/>
