@@ -5,7 +5,6 @@ import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.ftpfetcher.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
-import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.xfer.FileSystemFile;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
@@ -26,13 +25,11 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private final Settings settings;
 	private final IStorage storage;
 	private final Collection<DownloadElement> downloadElements;
-	private final SSHClient sshClient;
 	private final ProgressBarHandler progressBar;
 	private boolean stop;
 	private boolean pause;
 	
-	public FTPFetcher(@NotNull SSHClient sshClient, @NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
-		this.sshClient = sshClient;
+	public FTPFetcher(@NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
 		this.settings = settings;
 		this.storage = storage;
 		this.downloadElements = downloadElements;
@@ -46,7 +43,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	public Collection<DownloadResult> call() throws IOException{
 		var results = new LinkedList<DownloadResult>();
 		var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
-		try(var connection = new FTPConnection(sshClient, settings)){
+		try(var connection = new FTPConnection(settings)){
 			for(var element : downloadElements){
 				if(stop){
 					throw new StopDownloaderException("Executor stopped");

@@ -10,10 +10,8 @@ import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.ftpfetcher.storage.H2Storage;
 import fr.raksrinana.ftpfetcher.storage.IStorage;
 import fr.raksrinana.ftpfetcher.storage.NoOpStorage;
-import fr.raksrinana.utils.base.FileUtils;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBarBuilder;
-import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -84,19 +82,16 @@ public class Main{
 		}));
 		consoleHandler = new ConsoleHandler();
 		consoleHandler.start();
+		
 		Settings.loadSettings(parameters.getProperties()).ifPresentOrElse(settings -> {
 			try(var storage = getStorage(parameters)){
-				var sshClient = new SSHClient();
-				var knownHostsFilename = FileUtils.getHomeFolder().resolve(".ssh").resolve("known_hosts");
-				sshClient.loadKnownHosts(knownHostsFilename.toFile());
-				
 				var deletedUseless = removeUselessDownloadsInDb(storage);
 				log.info("Removed {} useless entries", deletedUseless);
 				
 				var startFetch = System.currentTimeMillis();
 				var downloadSet = new LinkedList<DownloadElement>();
 				for(var folderSettings : settings.getFolders()){
-					try(var connection = new FTPConnection(sshClient, settings)){
+					try(var connection = new FTPConnection(settings)){
 						downloadSet.addAll(fetchFolder(storage, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess()));
 					}
 					catch(IOException e){
@@ -108,7 +103,7 @@ public class Main{
 				}
 				log.info("Found {} elements to download in {}ms", downloadSet.size(), System.currentTimeMillis() - startFetch);
 				if(!downloadSet.isEmpty()){
-					downloadElements(parameters, sshClient, settings, storage, downloadSet);
+					downloadElements(parameters, settings, storage, downloadSet);
 				}
 			}
 			catch(Exception e){
@@ -118,7 +113,7 @@ public class Main{
 		consoleHandler.close();
 	}
 	
-	private static void downloadElements(@NotNull CLIParameters parameters, @NotNull SSHClient sshClient, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements){
+	private static void downloadElements(@NotNull CLIParameters parameters, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements){
 		log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(DownloadElement::getFileSize).sum()), parameters.getThreadCount());
 		var startDownload = System.currentTimeMillis();
 		executor = Executors.newFixedThreadPool(parameters.getThreadCount());
@@ -138,7 +133,7 @@ public class Main{
 						var progressBar = closingStack.add(progressBarBuilder.build());
 						var progressBarHandler = new ProgressBarHandler(progressBar);
 						
-						var fetcher = new FTPFetcher(sshClient, settings, storage, list, progressBarHandler);
+						var fetcher = new FTPFetcher(settings, storage, list, progressBarHandler);
 						consoleHandler.addFetcher(fetcher);
 						return fetcher;
 					})
