@@ -214,7 +214,7 @@ public class Main{
 						return Stream.empty();
 					}
 					catch(Exception e){
-						log.error("Error fetching folder {}/{}", f.getPath(), f.getName(), e);
+						log.error("Error fetching folder {}", f.getPath(), e);
 					}
 					return null;
 				}).filter(Objects::nonNull).collect(Collectors.toList());

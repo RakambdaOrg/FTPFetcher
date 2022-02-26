@@ -53,17 +53,6 @@ tasks {
 
         options.encoding = "UTF-8"
         options.isDeprecation = true
-
-        doFirst {
-            val compilerArgs = options.compilerArgs
-
-            val path = classpath.asPath.split(";")
-                .filter { it.endsWith(".jar") }
-                .joinToString(";")
-            compilerArgs.add("--module-path")
-            compilerArgs.add(path)
-            classpath = files()
-        }
     }
 
     jar {
@@ -95,6 +84,4 @@ application {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
-
-    modularity.inferModulePath.set(false)
 }
