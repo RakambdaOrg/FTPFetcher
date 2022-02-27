@@ -23,6 +23,10 @@
             <AppenderRef ref="console"/>
             <AppenderRef ref="file"/>
         </Logger>
+        <Logger level="warn" name="com.hierynomus.sshj" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+        </Logger>
         <Root level="info" additivity="false">
             <AppenderRef ref="console"/>
             <AppenderRef ref="file"/>
