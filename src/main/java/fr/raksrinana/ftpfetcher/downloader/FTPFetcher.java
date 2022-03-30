@@ -6,7 +6,6 @@ import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.ftpfetcher.storage.IStorage;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.FileAttributes;
-import net.schmizz.sshj.xfer.FileSystemFile;
 import net.schmizz.sshj.xfer.LocalDestFile;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
@@ -57,7 +56,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				progressBar.setExtraMessage(element.getSftpFile().getName());
 				if(!downloaded){
 					try{
-						var dest = new FileSystemFile(element.getFileOut().toFile());
+						var dest = new CustomLocalDestFile(element.getFileOut().toFile(), 512 * 1024);
 						connection.getSftp().get(element.getRemotePath(), dest);
 						setAttributes(element, dest);
 					}
