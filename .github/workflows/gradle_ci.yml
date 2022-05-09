@@ -33,7 +33,7 @@ jobs:
       - name: Set gradle permissions
         run: chmod +x gradlew
       - name: Check project
-        run: ./gradlew check build -PgithubRepoUsername="${GITHUB_USER}" -PgithubRepoPassword="${GITHUB_TOKEN}"
+        run: ./gradlew check build
         env:
           GITHUB_USER: RakSrinaNa
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

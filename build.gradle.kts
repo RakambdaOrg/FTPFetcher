@@ -17,7 +17,8 @@ dependencies {
     implementation(libs.slf4j)
     implementation(libs.bundles.log4j2)
 
-    implementation(libs.bundles.raksrinanaUtils)
+    implementation(libs.hikaricp)
+    implementation(libs.h2)
 
     implementation(libs.commonsIo)
     implementation(libs.commonsCollections)
@@ -30,16 +31,6 @@ dependencies {
 }
 
 repositories {
-    val githubRepoUsername: String by project
-    val githubRepoPassword: String by project
-
-    maven {
-        url = uri("https://maven.pkg.github.com/RakSrinaNa/JavaUtils/")
-        credentials {
-            username = githubRepoUsername
-            password = githubRepoPassword
-        }
-    }
     mavenCentral()
 }
 

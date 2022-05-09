@@ -5,11 +5,12 @@ log4j2-slf4j-version = "2.17.2"
 sshj-version = "0.33.0"
 picocli-version = "4.6.3"
 jackson-version = "2.13.2"
-raksrinana-utils-version = "15.0.3"
 commons-io-version = "2.11.0"
 progressbar-version = "0.9.3"
 jetbrains-annotations-version = "23.0.0"
 commons-collections-version = "4.4"
+hikari-cp-version = "5.0.1"
+h2-version = "2.1.212"
 
 shadow-version = "7.1.2"
 names-version = "0.42.0"
@@ -25,17 +26,16 @@ picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-ver
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson-version" }
 jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson-version" }
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson-version" }
-raksrinana-utils-base = { group = "fr.raksrinana", name = "utils.base", version.ref = "raksrinana-utils-version" }
-raksrinana-utils-config = { group = "fr.raksrinana", name = "utils.config", version.ref = "raksrinana-utils-version" }
 commonsIo = { group = "commons-io", name = "commons-io", version.ref = "commons-io-version" }
 commonsCollections = { group = "org.apache.commons", name = "commons-collections4", version.ref = "commons-collections-version" }
 progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progressbar-version" }
 jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations-version" }
+hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari-cp-version" }
+h2 = { group = "com.h2database", name = "h2", version.ref = "h2-version" }
 
 
 [bundles]
 jackson = ["jackson-core", "jackson-annotations", "jackson-databind"]
-raksrinanaUtils = ["raksrinana-utils-base", "raksrinana-utils-config"]
 log4j2 = ["log4j2-core", "log4j2-slf4j"]
 
 [plugins]

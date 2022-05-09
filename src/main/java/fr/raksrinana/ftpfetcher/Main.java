@@ -1,5 +1,7 @@
 package fr.raksrinana.ftpfetcher;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import fr.raksrinana.ftpfetcher.cli.CLIParameters;
 import fr.raksrinana.ftpfetcher.cli.Settings;
 import fr.raksrinana.ftpfetcher.downloader.FTPConnection;
@@ -7,9 +9,9 @@ import fr.raksrinana.ftpfetcher.downloader.FTPFetcher;
 import fr.raksrinana.ftpfetcher.downloader.ProgressBarHandler;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
-import fr.raksrinana.ftpfetcher.storage.H2Storage;
 import fr.raksrinana.ftpfetcher.storage.IStorage;
 import fr.raksrinana.ftpfetcher.storage.NoOpStorage;
+import fr.raksrinana.ftpfetcher.storage.database.H2Storage;
 import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
@@ -198,23 +200,23 @@ public class Main{
 			}
 			if(f.isDirectory()){
 				return true;
-					}
-					return true;
-				}).flatMap(f -> {
-					try{
-						if(recursive && f.isDirectory()){
-							return fetchFolder(storage, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getName() + "/", outPath.resolve(f.getName()), true, fileFilter, deleteOnSuccess).stream();
-						}
-						if(!f.isDirectory() && fileFilter.matcher(f.getName()).matches()){
-							return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess));
-						}
-						return Stream.empty();
-					}
-					catch(Exception e){
-						log.error("Error fetching folder {}", f.getPath(), e);
-					}
-					return null;
-				}).filter(Objects::nonNull).collect(Collectors.toList());
+			}
+			return true;
+		}).flatMap(f -> {
+			try{
+				if(recursive && f.isDirectory()){
+					return fetchFolder(storage, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getName() + "/", outPath.resolve(f.getName()), true, fileFilter, deleteOnSuccess).stream();
+				}
+				if(!f.isDirectory() && fileFilter.matcher(f.getName()).matches()){
+					return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess));
+				}
+				return Stream.empty();
+			}
+			catch(Exception e){
+				log.error("Error fetching folder {}", f.getPath(), e);
+			}
+			return null;
+		}).filter(Objects::nonNull).collect(Collectors.toList());
 		log.info("Verified folder {}, {} elements to download", folder, toDL.size());
 		return toDL;
 	}
@@ -230,10 +232,25 @@ public class Main{
 	}
 	
 	@NotNull
-	private static IStorage getStorage(@NotNull CLIParameters parameters) throws SQLException, IOException{
+	private static IStorage getStorage(@NotNull CLIParameters parameters) throws SQLException{
 		if(Objects.isNull(parameters.getDatabasePath())){
 			return new NoOpStorage();
 		}
-		return new H2Storage(parameters.getDatabasePath());
+		
+		var h2 = new H2Storage(createH2Datasource(parameters.getDatabasePath()));
+		h2.initDatabase();
+		return h2;
+	}
+	
+	@NotNull
+	private static HikariDataSource createH2Datasource(@NotNull Path path){
+		HikariConfig config = new HikariConfig();
+		config.setDriverClassName("org.h2.Driver");
+		config.setJdbcUrl("jdbc:h2:" + path.toAbsolutePath());
+		config.addDataSourceProperty("cachePrepStmts", "true");
+		config.addDataSourceProperty("prepStmtCacheSize", "250");
+		config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+		config.setMaximumPoolSize(1);
+		return new HikariDataSource(config);
 	}
 }

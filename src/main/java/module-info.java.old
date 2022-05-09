@@ -1,7 +1,5 @@
 open module fr.raksrinana.ftpfetcher {
 	requires java.sql;
-	requires fr.raksrinana.utils.base;
-	requires fr.raksrinana.utils.config;
 	requires info.picocli;
 	requires org.apache.commons.io;
 	requires org.apache.commons.collections4;
