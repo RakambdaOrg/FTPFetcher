@@ -14,6 +14,7 @@ commons-collections-version = "4.4"
 shadow-version = "7.1.2"
 names-version = "0.42.0"
 lombok-version = "6.4.3"
+jib-version = "3.2.1"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
@@ -41,3 +42,4 @@ log4j2 = ["log4j2-core", "log4j2-slf4j"]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-version" }
 names = { id = "com.github.ben-manes.versions", version.ref = "names-version" }
 lombok = { id = "io.freefair.lombok", version.ref = "lombok-version" }
+jib = { id = "com.google.cloud.tools.jib", version.ref = "jib-version" }

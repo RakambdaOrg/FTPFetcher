@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.names)
     alias(libs.plugins.lombok)
+    alias(libs.plugins.jib)
 }
 
 group = "fr.raksrinana"
@@ -84,4 +85,33 @@ application {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+jib {
+    from {
+        image = "eclipse-temurin:17-jdk"
+        platforms {
+            platform {
+                os = "linux"
+                architecture = "arm64"
+            }
+            platform {
+                os = "linux"
+                architecture = "amd64"
+            }
+            platform {
+                os = "linux"
+                architecture = "arm"
+            }
+        }
+    }
+    to {
+        auth {
+            username = project.findProperty("dockerUsername").toString()
+            password = project.findProperty("dockerPassword").toString()
+        }
+    }
+    container {
+        creationTime = "USE_CURRENT_TIMESTAMP"
+    }
 }

@@ -62,3 +62,23 @@ jobs:
           src: "ftpfetcher-shaded.jar"
           dest: "/Documents/JARs/FTPFetcher.jar"
           mode: overwrite
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    if:
+      contains('
+      refs/heads/main
+      ', github.ref)
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.APP_JAVA_VERSION }}
+      - name: Set gradle permissions
+        run: chmod +x gradlew
+      - name: Push on Docker repository
+        run: ./gradlew :scrapper:jib -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKER_TOKEN }} -Djib.to.image="${{ secrets.DOCKER_IMAGE_REPO }}/mrcraftcod/ftpfetcher:latest"
