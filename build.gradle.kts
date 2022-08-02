@@ -23,6 +23,7 @@ dependencies {
     implementation(libs.commonsIo)
     implementation(libs.commonsCollections)
     implementation(libs.progressbar)
+    implementation(libs.guava)
 
     implementation(libs.picocli)
     implementation(libs.bundles.jackson)

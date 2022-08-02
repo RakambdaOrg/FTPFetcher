@@ -135,7 +135,7 @@ public class Main{
 						var progressBar = closingStack.add(progressBarBuilder.build());
 						var progressBarHandler = new ProgressBarHandler(progressBar);
 						
-						var fetcher = new FTPFetcher(settings, storage, list, progressBarHandler);
+						var fetcher = new FTPFetcher(settings, storage, list, progressBarHandler, parameters.getBytesPerSecond());
 						consoleHandler.addFetcher(fetcher);
 						return fetcher;
 					})

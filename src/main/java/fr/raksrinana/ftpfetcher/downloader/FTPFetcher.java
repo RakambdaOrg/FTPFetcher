@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.xfer.LocalDestFile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
@@ -24,14 +25,16 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private final IStorage storage;
 	private final Collection<DownloadElement> downloadElements;
 	private final ProgressBarHandler progressBar;
+	private final Double bytesPerSecond;
 	private boolean stop;
 	private boolean pause;
 	
-	public FTPFetcher(@NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar){
+	public FTPFetcher(@NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar, @Nullable Double bytesPerSecond){
 		this.settings = settings;
 		this.storage = storage;
 		this.downloadElements = downloadElements;
 		this.progressBar = progressBar;
+		this.bytesPerSecond = bytesPerSecond;
 		stop = false;
 		pause = false;
 	}
@@ -56,7 +59,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				progressBar.setExtraMessage(element.getSftpFile().getName());
 				if(!downloaded){
 					try{
-						var dest = new CustomLocalDestFile(element.getFileOut().toFile(), 512 * 1024);
+						var dest = new CustomLocalDestFile(element.getFileOut().toFile(), 512 * 1024, bytesPerSecond);
 						connection.getSftp().get(element.getRemotePath(), dest);
 						setAttributes(element, dest);
 					}

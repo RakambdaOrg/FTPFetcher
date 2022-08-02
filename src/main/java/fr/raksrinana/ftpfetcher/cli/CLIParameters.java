@@ -29,4 +29,10 @@ public class CLIParameters{
 	}, description = "The path to the database to store downloads to")
 	@Nullable
 	private Path databasePath;
+	@CommandLine.Option(names = {
+			"-bps",
+			"--bytesPerSecond"
+	}, description = "The max download speed for each thread")
+	@Nullable
+	private Double bytesPerSecond = null;
 }

@@ -2,21 +2,31 @@ package fr.raksrinana.ftpfetcher.downloader;
 
 import net.schmizz.sshj.xfer.FileSystemFile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 
 public class CustomLocalDestFile extends FileSystemFile{
 	private final int bufferSize;
+	private final Double bytesPerSecond;
 	
-	public CustomLocalDestFile(@NotNull File file, int bufferSize){
+	public CustomLocalDestFile(@NotNull File file, int bufferSize, @Nullable Double bytesPerSecond){
 		super(file);
 		this.bufferSize = bufferSize;
+		this.bytesPerSecond = bytesPerSecond;
 	}
 	
 	@Override
 	public OutputStream getOutputStream() throws IOException{
-		return new BufferedOutputStream(super.getOutputStream(), bufferSize);
+		var os = new BufferedOutputStream(super.getOutputStream(), bufferSize);
+		
+		if(Objects.isNull(bytesPerSecond)){
+			return os;
+		}
+		
+		return new ThrottledOutputStream(os, bytesPerSecond);
 	}
 }

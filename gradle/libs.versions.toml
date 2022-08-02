@@ -11,6 +11,7 @@ jetbrains-annotations-version = "23.0.0"
 commons-collections-version = "4.4"
 hikari-cp-version = "5.0.1"
 h2-version = "2.1.214"
+guava-version = "31.1-jre"
 
 shadow-version = "7.1.2"
 names-version = "0.42.0"
@@ -32,7 +33,7 @@ progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progr
 jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations-version" }
 hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari-cp-version" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2-version" }
-
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava-version" }
 
 [bundles]
 jackson = ["jackson-core", "jackson-annotations", "jackson-databind"]
