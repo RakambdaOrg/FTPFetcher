@@ -13,12 +13,16 @@ import fr.raksrinana.ftpfetcher.storage.IStorage;
 import fr.raksrinana.ftpfetcher.storage.NoOpStorage;
 import fr.raksrinana.ftpfetcher.storage.database.H2Storage;
 import lombok.extern.log4j.Log4j2;
+import me.tongfei.progressbar.InteractiveConsoleProgressBarConsumer;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -131,6 +135,7 @@ public class Main{
 						var progressBarBuilder = new ProgressBarBuilder()
 								.setTaskName("Downloader #" + count.incrementAndGet())
 								.setInitialMax(list.stream().mapToLong(DownloadElement::getFileSize).sum())
+								.setConsumer(new InteractiveConsoleProgressBarConsumer(new PrintStream(new FileOutputStream(FileDescriptor.err)), -1))
 								.setUnit("MiB", 1048576);
 						var progressBar = closingStack.add(progressBarBuilder.build());
 						var progressBarHandler = new ProgressBarHandler(progressBar);
