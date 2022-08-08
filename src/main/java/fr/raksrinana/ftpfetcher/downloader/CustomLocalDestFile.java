@@ -23,7 +23,7 @@ public class CustomLocalDestFile extends FileSystemFile{
 	public OutputStream getOutputStream() throws IOException{
 		var os = new BufferedOutputStream(super.getOutputStream(), bufferSize);
 		
-		if(Objects.isNull(bytesPerSecond)){
+		if(Objects.isNull(bytesPerSecond) || bytesPerSecond <= 0){
 			return os;
 		}
 		
