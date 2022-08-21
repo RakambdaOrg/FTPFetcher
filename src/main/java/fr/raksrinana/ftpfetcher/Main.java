@@ -122,11 +122,13 @@ public class Main{
 	private static void downloadElements(@NotNull CLIParameters parameters, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements){
 		log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(DownloadElement::getFileSize).sum()), parameters.getThreadCount());
 		var startDownload = System.currentTimeMillis();
-		executor = Executors.newFixedThreadPool(parameters.getThreadCount());
 		var futures = new ArrayList<Future<Collection<DownloadResult>>>();
 		var results = new LinkedList<DownloadResult>();
+		var partitions = Math.min(parameters.getThreadCount(), downloadElements.size());
 		
-		var lists = split(downloadElements, parameters.getThreadCount(), DownloadElement::getFileSize);
+		executor = Executors.newFixedThreadPool(partitions);
+		
+		var lists = split(downloadElements, partitions, DownloadElement::getFileSize);
 		
 		try(var closingStack = new ClosingStack()){
 			var count = new AtomicInteger(0);
