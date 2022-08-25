@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Optional;
 import java.util.Scanner;
 
 /**
@@ -46,14 +47,24 @@ class ConsoleHandler extends Thread{
 					}
 					var command = args.poll();
 					if("q".equals(command)){
+						log.info("Exiting");
 						fetchers.forEach(FTPFetcher::resume);
 						fetchers.forEach(FTPFetcher::close);
 					}
 					else if("p".equals(command)){
+						log.info("Pausing");
 						fetchers.forEach(FTPFetcher::pause);
 					}
 					else if("r".equals(command)){
+						log.info("Resuming");
 						fetchers.forEach(FTPFetcher::resume);
+					}
+					else if("bps".equals(command)){
+						var bps = Optional.ofNullable(args.poll())
+								.map(Double::parseDouble)
+								.orElse(null);
+						log.info("Setting bps to {}", bps);
+						fetchers.forEach(f -> f.setBytesPerSecond(bps));
 					}
 				}
 				catch(Exception e){

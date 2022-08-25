@@ -4,6 +4,7 @@ import fr.raksrinana.ftpfetcher.cli.Settings;
 import fr.raksrinana.ftpfetcher.model.DownloadElement;
 import fr.raksrinana.ftpfetcher.model.DownloadResult;
 import fr.raksrinana.ftpfetcher.storage.IStorage;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.xfer.LocalDestFile;
@@ -25,7 +26,8 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private final IStorage storage;
 	private final Collection<DownloadElement> downloadElements;
 	private final ProgressBarHandler progressBar;
-	private final Double bytesPerSecond;
+	@Setter
+	private Double bytesPerSecond;
 	private boolean stop;
 	private boolean pause;
 	
