@@ -1,7 +1,7 @@
 [versions]
 slf4j-version = "2.0.3"
 log4j2-version = "2.19.0"
-log4j2-slf4j-version = "2.18.0"
+log4j2-slf4j-version = "2.19.0"
 sshj-version = "0.34.0"
 picocli-version = "4.6.3"
 jackson-version = "2.13.4"
@@ -21,7 +21,7 @@ jib-version = "3.3.0"
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
 log4j2-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j2-version" }
-log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j18-impl", version.ref = "log4j2-slf4j-version" }
+log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j2-slf4j-version" }
 sshj = { group = "com.hierynomus", name = "sshj", version.ref = "sshj-version" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-version" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson-version" }
