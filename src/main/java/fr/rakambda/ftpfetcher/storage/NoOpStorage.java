@@ -1,6 +1,6 @@
-package fr.raksrinana.ftpfetcher.storage;
+package fr.rakambda.ftpfetcher.storage;
 
-import fr.raksrinana.ftpfetcher.model.DownloadElement;
+import fr.rakambda.ftpfetcher.model.DownloadElement;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import java.util.Collection;

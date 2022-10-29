@@ -1,7 +1,7 @@
-package fr.raksrinana.ftpfetcher.storage.database;
+package fr.rakambda.ftpfetcher.storage.database;
 
 import com.zaxxer.hikari.HikariDataSource;
-import fr.raksrinana.ftpfetcher.storage.IStorage;
+import fr.rakambda.ftpfetcher.storage.IStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;

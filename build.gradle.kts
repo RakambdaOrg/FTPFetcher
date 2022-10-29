@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.jib)
 }
 
-group = "fr.raksrinana"
+group = "fr.rakambda"
 description = "FTPFetcher"
 
 dependencies {

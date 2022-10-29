@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher;
+package fr.rakambda.ftpfetcher;
 
 import java.util.Deque;
 import java.util.LinkedList;

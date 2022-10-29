@@ -1,6 +1,6 @@
-package fr.raksrinana.ftpfetcher;
+package fr.rakambda.ftpfetcher;
 
-import fr.raksrinana.ftpfetcher.downloader.FTPFetcher;
+import fr.rakambda.ftpfetcher.downloader.FTPFetcher;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;

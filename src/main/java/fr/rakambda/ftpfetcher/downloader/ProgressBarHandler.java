@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher.downloader;
+package fr.rakambda.ftpfetcher.downloader;
 
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;

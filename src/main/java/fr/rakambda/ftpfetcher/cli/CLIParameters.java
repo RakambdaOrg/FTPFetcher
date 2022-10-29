@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher.cli;
+package fr.rakambda.ftpfetcher.cli;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,6 +1,6 @@
-package fr.raksrinana.ftpfetcher.downloader;
+package fr.rakambda.ftpfetcher.downloader;
 
-import fr.raksrinana.ftpfetcher.cli.Settings;
+import fr.rakambda.ftpfetcher.cli.Settings;
 import lombok.Getter;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.SFTPClient;

@@ -1,9 +1,9 @@
-package fr.raksrinana.ftpfetcher.downloader;
+package fr.rakambda.ftpfetcher.downloader;
 
-import fr.raksrinana.ftpfetcher.cli.Settings;
-import fr.raksrinana.ftpfetcher.model.DownloadElement;
-import fr.raksrinana.ftpfetcher.model.DownloadResult;
-import fr.raksrinana.ftpfetcher.storage.IStorage;
+import fr.rakambda.ftpfetcher.cli.Settings;
+import fr.rakambda.ftpfetcher.model.DownloadElement;
+import fr.rakambda.ftpfetcher.model.DownloadResult;
+import fr.rakambda.ftpfetcher.storage.IStorage;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.FileAttributes;

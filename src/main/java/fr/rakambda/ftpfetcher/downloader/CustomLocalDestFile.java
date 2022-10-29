@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher.downloader;
+package fr.rakambda.ftpfetcher.downloader;
 
 import net.schmizz.sshj.xfer.FileSystemFile;
 import org.jetbrains.annotations.NotNull;

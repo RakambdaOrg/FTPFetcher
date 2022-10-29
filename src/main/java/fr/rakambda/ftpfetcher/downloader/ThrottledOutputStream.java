@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher.downloader;
+package fr.rakambda.ftpfetcher.downloader;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.jetbrains.annotations.NotNull;

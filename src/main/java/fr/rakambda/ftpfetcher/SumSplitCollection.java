@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher;
+package fr.rakambda.ftpfetcher;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package fr.raksrinana.ftpfetcher.storage.database;
+package fr.rakambda.ftpfetcher.storage.database;
 
 import org.jetbrains.annotations.NotNull;
 import java.sql.Connection;

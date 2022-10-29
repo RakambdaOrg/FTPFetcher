@@ -1,7 +1,7 @@
-package fr.raksrinana.ftpfetcher.storage.database;
+package fr.rakambda.ftpfetcher.storage.database;
 
 import com.zaxxer.hikari.HikariDataSource;
-import fr.raksrinana.ftpfetcher.model.DownloadElement;
+import fr.rakambda.ftpfetcher.model.DownloadElement;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
