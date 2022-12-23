@@ -105,5 +105,6 @@ jib {
     }
     container {
         creationTime.set("USE_CURRENT_TIMESTAMP")
+        user = "1027:100"
     }
 }
