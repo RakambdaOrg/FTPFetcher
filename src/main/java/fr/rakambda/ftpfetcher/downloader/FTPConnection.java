@@ -2,12 +2,15 @@ package fr.rakambda.ftpfetcher.downloader;
 
 import fr.rakambda.ftpfetcher.cli.Settings;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.SFTPClient;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 
+@Log4j2
 public class FTPConnection implements AutoCloseable{
 	private final SSHClient ssh;
 	private final Settings settings;
@@ -23,7 +26,10 @@ public class FTPConnection implements AutoCloseable{
 	}
 	
 	private void connect() throws IOException{
-		var knownHostsFilename = Paths.get(System.getProperty("user.home")).resolve(".ssh").resolve("known_hosts");
+		var knownHostsFilename = Optional.ofNullable(settings.getKnownHosts()).map(Paths::get)
+				.orElseGet(() -> Paths.get(System.getProperty("user.home")).resolve(".ssh").resolve("known_hosts"));
+		
+		log.debug("Loading known hosts from {}", knownHostsFilename.toAbsolutePath());
 		ssh.loadKnownHosts(knownHostsFilename.toFile());
 		
 		ssh.connect(settings.getFtpHost());

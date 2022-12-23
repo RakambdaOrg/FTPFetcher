@@ -36,6 +36,8 @@ public class Settings{
 	@JsonProperty("ftpPass")
 	@NotNull
 	private String ftpPass;
+	@JsonProperty("knownHosts")
+	private String knownHosts;
 	@JsonProperty("folders")
 	@NotNull
 	private List<FolderSettings> folders;
