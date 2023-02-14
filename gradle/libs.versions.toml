@@ -12,10 +12,10 @@ commons-collections-version = "4.4"
 hikari-cp-version = "5.0.1"
 h2-version = "2.1.214"
 guava-version = "31.1-jre"
+lombok-version = "1.18.26"
 
 shadow-version = "7.1.2"
 names-version = "0.45.0"
-lombok-version = "6.6.1"
 jib-version = "3.3.1"
 
 [libraries]
@@ -34,6 +34,7 @@ jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.
 hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari-cp-version" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2-version" }
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava-version" }
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok-version" }
 
 [bundles]
 jackson = ["jackson-core", "jackson-annotations", "jackson-databind"]
@@ -42,5 +43,4 @@ log4j2 = ["log4j2-core", "log4j2-slf4j"]
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-version" }
 names = { id = "com.github.ben-manes.versions", version.ref = "names-version" }
-lombok = { id = "io.freefair.lombok", version.ref = "lombok-version" }
 jib = { id = "com.google.cloud.tools.jib", version.ref = "jib-version" }
