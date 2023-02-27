@@ -14,7 +14,7 @@ h2-version = "2.1.214"
 guava-version = "31.1-jre"
 lombok-version = "1.18.26"
 
-shadow-version = "8.0.0"
+shadow-version = "8.1.0"
 names-version = "0.46.0"
 jib-version = "3.3.1"
 
