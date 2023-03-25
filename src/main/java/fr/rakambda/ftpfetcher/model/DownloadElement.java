@@ -7,8 +7,10 @@ import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Set;
 
 @NoArgsConstructor
 @Getter
@@ -21,8 +23,9 @@ public class DownloadElement{
 	@Setter
 	private LocalDateTime downloadedAt;
 	private FileAttributes attributes;
+	private Set<PosixFilePermission> permissions;
 	
-	public DownloadElement(@NotNull String folder, @NotNull RemoteResourceInfo sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt){
+	public DownloadElement(@NotNull String folder, @NotNull RemoteResourceInfo sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt, Set<PosixFilePermission> permissions){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.sftpFile = sftpFile;
 		attributes = sftpFile.getAttributes();
@@ -30,6 +33,7 @@ public class DownloadElement{
 		this.fileOut = fileOut;
 		this.deleteOnSuccess = deleteOnSuccess;
 		this.downloadedAt = downloadedAt;
+		this.permissions = permissions;
 	}
 	
 	@Override

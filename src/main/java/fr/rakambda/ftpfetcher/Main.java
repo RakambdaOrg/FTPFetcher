@@ -26,6 +26,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -35,6 +37,8 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -98,7 +102,8 @@ public class Main{
 				var downloadSet = new LinkedList<DownloadElement>();
 				for(var folderSettings : settings.getFolders()){
 					try(var connection = new FTPConnection(settings)){
-						downloadSet.addAll(fetchFolder(storage, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess()));
+						var permissions = Optional.ofNullable(folderSettings.getFilePermissions()).map(PosixFilePermissions::fromString).orElse(null);
+						downloadSet.addAll(fetchFolder(storage, connection, folderSettings.getFtpFolder(), folderSettings.getLocalFolder(), folderSettings.isRecursive(), Pattern.compile(folderSettings.getFileFilter()), folderSettings.isDeleteOnSuccess(), permissions));
 					}
 					catch(IOException e){
 						log.error("Error fetching folder {}", folderSettings.getFtpFolder(), e);
@@ -193,7 +198,7 @@ public class Main{
 	}
 	
 	@NotNull
-	private static Collection<? extends DownloadElement> fetchFolder(@NotNull IStorage storage, @NotNull FTPConnection connection, @NotNull String folder, @NotNull Path outPath, boolean recursive, @NotNull Pattern fileFilter, boolean deleteOnSuccess) throws SQLException, IOException{
+	private static Collection<? extends DownloadElement> fetchFolder(@NotNull IStorage storage, @NotNull FTPConnection connection, @NotNull String folder, @NotNull Path outPath, boolean recursive, @NotNull Pattern fileFilter, boolean deleteOnSuccess, Set<PosixFilePermission> permissions) throws SQLException, IOException{
 		log.info("Fetching folder {}", folder);
 		if(Objects.isNull(connection.getSftp().statExistence(folder))){
 			log.warn("Input path {} does not exists", folder);
@@ -212,10 +217,10 @@ public class Main{
 		}).flatMap(f -> {
 			try{
 				if(recursive && f.isDirectory()){
-					return fetchFolder(storage, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getName() + "/", outPath.resolve(f.getName()), true, fileFilter, deleteOnSuccess).stream();
+					return fetchFolder(storage, connection, folder + (folder.endsWith("/") ? "" : "/") + f.getName() + "/", outPath.resolve(f.getName()), true, fileFilter, deleteOnSuccess, permissions).stream();
 				}
 				if(!f.isDirectory() && fileFilter.matcher(f.getName()).matches()){
-					return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess));
+					return Stream.of(createDownload(folder, f, outPath, deleteOnSuccess, permissions));
 				}
 				return Stream.empty();
 			}
@@ -229,13 +234,13 @@ public class Main{
 	}
 	
 	@Nullable
-	private static DownloadElement createDownload(@NotNull String folder, @NotNull RemoteResourceInfo file, @NotNull Path folderOut, boolean deleteOnSuccess) throws IOException{
+	private static DownloadElement createDownload(@NotNull String folder, @NotNull RemoteResourceInfo file, @NotNull Path folderOut, boolean deleteOnSuccess, Set<PosixFilePermission> permissions) throws IOException{
 		var fileOut = folderOut.resolve(file.getName());
 		if(Files.exists(fileOut)){
 			return null;
 		}
 		Files.createDirectories(fileOut.getParent());
-		return new DownloadElement(folder, file, fileOut, deleteOnSuccess, LocalDateTime.MIN);
+		return new DownloadElement(folder, file, fileOut, deleteOnSuccess, LocalDateTime.MIN, permissions);
 	}
 	
 	@NotNull

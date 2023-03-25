@@ -26,7 +26,8 @@ This is a JSON file following this pattern:
       "recursive": true, // default: false
       "fileFilter": ".*\\.(jpg|mp4|mov)$", // default: ".*"
       "isFilenameDate": false, // default: true
-      "deleteOnSuccess": true // default: false
+      "deleteOnSuccess": true, // default: false
+      "filePermissions": "rwxrwxrwx" // default: null
     }
   ]
 }

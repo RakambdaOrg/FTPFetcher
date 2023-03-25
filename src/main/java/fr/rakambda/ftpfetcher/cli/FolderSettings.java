@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ext.NioPathDeserializer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 
 @SuppressWarnings("FieldMayBeFinal")
@@ -30,4 +31,7 @@ public class FolderSettings{
 	private String ftpFolder;
 	@JsonProperty("deleteOnSuccess")
 	private boolean deleteOnSuccess = false;
+	@JsonProperty("filePermissions")
+	@Nullable
+	private String filePermissions = null;
 }

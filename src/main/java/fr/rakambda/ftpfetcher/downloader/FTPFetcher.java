@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 @Log4j2
@@ -64,6 +65,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						var dest = new CustomLocalDestFile(element.getFileOut().toFile(), 512 * 1024, bytesPerSecond);
 						connection.getSftp().get(element.getRemotePath(), dest);
 						setAttributes(element, dest);
+						setFilePermissions(element);
 					}
 					catch(IOException e){
 						log.warn("IO - Error downloading file {}", element, e);
@@ -129,6 +131,17 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 			}
 		}
 		return results;
+	}
+	
+	private void setFilePermissions(@NotNull DownloadElement element) throws IOException{
+		try{
+			if(Objects.nonNull(element.getPermissions())){
+				Files.setPosixFilePermissions(element.getFileOut(), element.getPermissions());
+			}
+		}
+		catch(Exception e){
+			log.warn("Error setting file permissions for {}", element.getFileOut(), e);
+		}
 	}
 	
 	private static void setAttributes(@NotNull DownloadElement element, @NotNull LocalDestFile dest){
