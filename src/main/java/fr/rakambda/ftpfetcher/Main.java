@@ -26,6 +26,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
@@ -234,13 +235,24 @@ public class Main{
 	}
 	
 	@Nullable
-	private static DownloadElement createDownload(@NotNull String folder, @NotNull RemoteResourceInfo file, @NotNull Path folderOut, boolean deleteOnSuccess, Set<PosixFilePermission> permissions) throws IOException{
+	private static DownloadElement createDownload(@NotNull String folder, @NotNull RemoteResourceInfo file, @NotNull Path folderOut, boolean deleteOnSuccess, @Nullable Set<PosixFilePermission> permissions) throws IOException{
 		var fileOut = folderOut.resolve(file.getName());
 		if(Files.exists(fileOut)){
 			return null;
 		}
-		Files.createDirectories(fileOut.getParent());
+		createDirectoryWithPermission(fileOut.getParent(), permissions);
 		return new DownloadElement(folder, file, fileOut, deleteOnSuccess, LocalDateTime.MIN, permissions);
+	}
+	
+	private static void createDirectoryWithPermission(@Nullable Path path, Set<PosixFilePermission> permissions) throws IOException{
+		if(Objects.isNull(path) || Files.exists(path)){
+			return;
+		}
+		createDirectoryWithPermission(path.getParent(), permissions);
+		
+		log.debug("Creating directory {}", path.toAbsolutePath());
+		var attributes = Optional.ofNullable(permissions).map(PosixFilePermissions::asFileAttribute).stream().toArray(FileAttribute[]::new);
+		Files.createDirectory(path, attributes);
 	}
 	
 	@NotNull

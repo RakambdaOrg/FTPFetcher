@@ -6,6 +6,7 @@ import lombok.Setter;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDateTime;
@@ -25,7 +26,7 @@ public class DownloadElement{
 	private FileAttributes attributes;
 	private Set<PosixFilePermission> permissions;
 	
-	public DownloadElement(@NotNull String folder, @NotNull RemoteResourceInfo sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt, Set<PosixFilePermission> permissions){
+	public DownloadElement(@NotNull String folder, @NotNull RemoteResourceInfo sftpFile, @NotNull Path fileOut, boolean deleteOnSuccess, @NotNull LocalDateTime downloadedAt, @Nullable Set<PosixFilePermission> permissions){
 		this.folder = folder + (folder.endsWith("/") ? "" : "/");
 		this.sftpFile = sftpFile;
 		attributes = sftpFile.getAttributes();
