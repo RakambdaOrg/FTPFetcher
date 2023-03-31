@@ -26,7 +26,6 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
@@ -251,8 +250,10 @@ public class Main{
 		createDirectoryWithPermission(path.getParent(), permissions);
 		
 		log.debug("Creating directory {}", path.toAbsolutePath());
-		var attributes = Optional.ofNullable(permissions).map(PosixFilePermissions::asFileAttribute).stream().toArray(FileAttribute[]::new);
-		Files.createDirectory(path, attributes);
+		Files.createDirectory(path);
+		if(Objects.nonNull(permissions)){
+			Files.setPosixFilePermissions(path, permissions);
+		}
 	}
 	
 	@NotNull
