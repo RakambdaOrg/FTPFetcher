@@ -93,10 +93,6 @@ jib {
                 os = "linux"
                 architecture = "amd64"
             }
-            platform {
-                os = "linux"
-                architecture = "arm"
-            }
         }
     }
     to {
