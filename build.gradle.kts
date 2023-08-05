@@ -95,12 +95,6 @@ jib {
             }
         }
     }
-    to {
-        auth {
-            username = project.findProperty("dockerUsername").toString()
-            password = project.findProperty("dockerPassword").toString()
-        }
-    }
     container {
         creationTime.set("USE_CURRENT_TIMESTAMP")
         user = "1052:100"
