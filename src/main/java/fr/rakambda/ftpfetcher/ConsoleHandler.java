@@ -3,17 +3,14 @@ package fr.rakambda.ftpfetcher;
 import fr.rakambda.ftpfetcher.downloader.FTPFetcher;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.Scanner;
+
+import java.util.*;
 
 /**
  * Handles commands sent in the standard input.
  */
 @Log4j2
-class ConsoleHandler extends Thread{
+class ConsoleHandler extends Thread implements AutoCloseable {
 	private static final int WAIT_DELAY = 10000;
 	private final Collection<FTPFetcher> fetchers = new LinkedList<>();
 	private boolean stop;
@@ -77,7 +74,8 @@ class ConsoleHandler extends Thread{
 	/**
 	 * Close the console handler.
 	 */
-	void close(){
+	@Override
+	public void close() {
 		stop = true;
 	}
 	
