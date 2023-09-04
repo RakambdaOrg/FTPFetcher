@@ -10,7 +10,7 @@ progressbar-version = "0.10.0"
 jetbrains-annotations-version = "24.0.1"
 commons-collections-version = "4.4"
 hikari-cp-version = "5.0.1"
-h2-version = "2.2.220"
+h2-version = "2.2.222"
 guava-version = "32.1.2-jre"
 lombok-version = "1.18.28"
 
