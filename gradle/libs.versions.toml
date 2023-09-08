@@ -15,7 +15,7 @@ guava-version = "32.1.2-jre"
 lombok-version = "1.18.28"
 
 shadow-version = "8.1.1"
-names-version = "0.47.0"
+names-version = "0.48.0"
 jib-version = "3.3.2"
 
 [libraries]
