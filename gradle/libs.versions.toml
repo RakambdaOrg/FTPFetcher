@@ -16,7 +16,7 @@ lombok-version = "1.18.30"
 
 shadow-version = "8.1.1"
 names-version = "0.48.0"
-jib-version = "3.3.2"
+jib-version = "3.4.0"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
