@@ -2,7 +2,7 @@
 slf4j-version = "2.0.10"
 log4j2-version = "2.22.1"
 log4j2-slf4j-version = "2.22.1"
-sshj-version = "0.37.0"
+sshj-version = "0.38.0"
 picocli-version = "4.7.5"
 jackson-version = "2.16.1"
 commons-io-version = "2.15.1"
