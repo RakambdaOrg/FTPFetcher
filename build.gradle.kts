@@ -11,6 +11,8 @@ group = "fr.rakambda"
 description = "FTPFetcher"
 
 dependencies {
+    implementation(platform(libs.jacksonBom))
+
     implementation(libs.sshj)
 
     implementation(libs.slf4j)

@@ -24,9 +24,10 @@ log4j2-core = { group = "org.apache.logging.log4j", name = "log4j-core", version
 log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j2-slf4j-version" }
 sshj = { group = "com.hierynomus", name = "sshj", version.ref = "sshj-version" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-version" }
-jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson-version" }
-jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson-version" }
-jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson-version" }
+jacksonBom = { group = "com.fasterxml.jackson", name = "jackson-bom", version.ref = "jackson-version" }
+jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core" }
+jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations" }
+jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind" }
 commonsIo = { group = "commons-io", name = "commons-io", version.ref = "commons-io-version" }
 commonsCollections = { group = "org.apache.commons", name = "commons-collections4", version.ref = "commons-collections-version" }
 progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progressbar-version" }
