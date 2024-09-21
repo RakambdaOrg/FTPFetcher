@@ -7,10 +7,6 @@ on:
 permissions:
   contents: write
 
-env:
-  GITHUB_USERNAME: ${{ github.actor }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 jobs:
   build:
     uses: RakambdaOrg/rakambda-github-workflows/.github/workflows/gradle-build.yml@main
