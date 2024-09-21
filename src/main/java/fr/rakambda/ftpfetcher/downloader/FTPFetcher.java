@@ -4,6 +4,7 @@ import fr.rakambda.ftpfetcher.cli.Settings;
 import fr.rakambda.ftpfetcher.model.DownloadElement;
 import fr.rakambda.ftpfetcher.model.DownloadResult;
 import fr.rakambda.ftpfetcher.storage.IStorage;
+import fr.rakambda.progressbar.api.bar.IProgressBar;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.FileAttributes;
@@ -23,16 +24,17 @@ import java.util.concurrent.Callable;
 @Log4j2
 public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private static final int MARK_DOWNLOADED_THRESHOLD = 25;
+	
 	private final Settings settings;
 	private final IStorage storage;
 	private final Collection<DownloadElement> downloadElements;
-	private final ProgressBarHandler progressBar;
+	private final IProgressBar progressBar;
 	@Setter
 	private Double bytesPerSecond;
 	private boolean stop;
 	private boolean pause;
 	
-	public FTPFetcher(@NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar, @Nullable Double bytesPerSecond){
+	public FTPFetcher(@NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull IProgressBar progressBar, @Nullable Double bytesPerSecond){
 		this.settings = settings;
 		this.storage = storage;
 		this.downloadElements = downloadElements;
@@ -59,7 +61,9 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				var fileOut = element.getFileOut();
 				var downloaded = Files.exists(fileOut);
 				log.debug("Downloading file {}", element.getRemotePath());
-				progressBar.setExtraMessage(element.getSftpFile().getName());
+				
+				progressBar.setDescription(element.getSftpFile().getName());
+				
 				if(!downloaded){
 					try{
 						var dest = new CustomLocalDestFile(element.getFileOut().toFile(), 512 * 1024, bytesPerSecond);
@@ -74,7 +78,6 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 						}
 						catch(IOException ignored){
 						}
-						continue;
 					}
 					try{
 						long fileLength = Files.size(fileOut);
@@ -102,7 +105,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 							log.error("Failed to delete remote file {} after a successful download", element.getRemotePath(), e);
 						}
 					}
-					progressBar.stepBy(element.getFileSize());
+					this.progressBar.increment(progressBar.getCurrent());
 				}
 				if(toMarkDownloaded.size() >= MARK_DOWNLOADED_THRESHOLD){
 					markDownloaded(toMarkDownloaded);

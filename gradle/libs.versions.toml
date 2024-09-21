@@ -6,7 +6,8 @@ sshj-version = "0.39.0"
 picocli-version = "4.7.6"
 jackson-version = "2.17.2"
 commons-io-version = "2.17.0"
-progressbar-version = "0.10.1"
+#progressbar-version = "0.10.1"
+progressbar-version = "0.0.2"
 jetbrains-annotations-version = "24.1.0"
 commons-collections-version = "4.4"
 hikari-cp-version = "5.1.0"
@@ -30,7 +31,8 @@ jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-an
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind" }
 commonsIo = { group = "commons-io", name = "commons-io", version.ref = "commons-io-version" }
 commonsCollections = { group = "org.apache.commons", name = "commons-collections4", version.ref = "commons-collections-version" }
-progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progressbar-version" }
+#progressbar = { group = "me.tongfei", name = "progressbar", version.ref = "progressbar-version" }
+progressbar = { group = "fr.rakambda", name = "progressbar", version.ref = "progressbar-version" }
 jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations-version" }
 hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari-cp-version" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2-version" }

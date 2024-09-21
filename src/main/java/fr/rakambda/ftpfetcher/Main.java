@@ -6,24 +6,20 @@ import fr.rakambda.ftpfetcher.cli.CLIParameters;
 import fr.rakambda.ftpfetcher.cli.Settings;
 import fr.rakambda.ftpfetcher.downloader.FTPConnection;
 import fr.rakambda.ftpfetcher.downloader.FTPFetcher;
-import fr.rakambda.ftpfetcher.downloader.ProgressBarHandler;
 import fr.rakambda.ftpfetcher.model.DownloadElement;
 import fr.rakambda.ftpfetcher.model.DownloadResult;
 import fr.rakambda.ftpfetcher.storage.IStorage;
 import fr.rakambda.ftpfetcher.storage.NoOpStorage;
 import fr.rakambda.ftpfetcher.storage.database.H2Storage;
+import fr.rakambda.progressbar.impl.bar.ComposedProgressBar;
+import fr.rakambda.progressbar.impl.bar.SimpleProgressBar;
+import fr.rakambda.progressbar.impl.holder.ProgressBarHolder;
 import lombok.extern.log4j.Log4j2;
-import me.tongfei.progressbar.InteractiveConsoleProgressBarConsumer;
-import me.tongfei.progressbar.ProgressBarBuilder;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
-
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,11 +30,19 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -104,33 +108,40 @@ public class Main {
     }
 
     private static void downloadElements(@NotNull CLIParameters parameters, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements, ConsoleHandler consoleHandler) {
-        log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(DownloadElement::getFileSize).sum()), parameters.getThreadCount());
+	    log.info("Starting to download {} ({}) with {} downloaders",
+			    downloadElements.size(),
+			    org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(DownloadElement::getFileSize).sum()),
+			    parameters.getThreadCount()
+	    );
         var startDownload = System.currentTimeMillis();
         var futures = new ArrayList<Future<Collection<DownloadResult>>>();
         var results = new LinkedList<DownloadResult>();
         var partitions = Math.min(parameters.getThreadCount(), downloadElements.size());
 
         var lists = split(downloadElements, partitions, DownloadElement::getFileSize);
-
-        try (var executor = Executors.newFixedThreadPool(partitions); var closingStack = new ClosingStack()) {
-
+	    
+	    try(var executor = Executors.newFixedThreadPool(partitions);
+			    var progressBarHolder = ProgressBarHolder.builder().build()
+	    ){
+		    var downloaderProgressBars = progressBarHolder.addProgressBar(ComposedProgressBar.builder()
+				    .name("Downloads")
+				    .removeWhenComplete(false)
+				    .build());
+			
             var count = new AtomicInteger(0);
-            lists.stream()
-                    .map(list -> {
-                        var progressBarBuilder = new ProgressBarBuilder()
-                                .setTaskName("Downloader #" + count.incrementAndGet())
-                                .setInitialMax(list.stream().mapToLong(DownloadElement::getFileSize).sum())
-                                .setConsumer(new InteractiveConsoleProgressBarConsumer(new PrintStream(new FileOutputStream(FileDescriptor.err)), -1))
-                                .setUnit("MiB", 1048576);
-                        var progressBar = closingStack.add(progressBarBuilder.build());
-                        var progressBarHandler = new ProgressBarHandler(progressBar);
-
-                        var fetcher = new FTPFetcher(settings, storage, list, progressBarHandler, parameters.getBytesPerSecond());
-                        consoleHandler.addFetcher(fetcher);
-                        return fetcher;
-                    })
-                    .map(executor::submit)
-                    .forEach(futures::add);
+		    for(int i = 0; i < lists.size(); i++){
+			    var list = lists.get(i);
+			    var progressBar = downloaderProgressBars.addProgressBar(SimpleProgressBar.builder()
+					    .name("Downloader %d".formatted(i + 1))
+					    .end(new AtomicLong(list.stream().mapToLong(DownloadElement::getFileSize).sum()))
+					    .hideWhenComplete(true)
+					    .unit("MiB")
+					    .unitFactor(1048576L)
+					    .build());
+			    var fetcher = new FTPFetcher(settings, storage, list, progressBar, parameters.getBytesPerSecond());
+			    consoleHandler.addFetcher(fetcher);
+			    futures.add(executor.submit(fetcher));
+		    }
 
             executor.shutdown();
             futures.parallelStream()
@@ -146,12 +157,19 @@ public class Main {
                     .filter(Objects::nonNull)
                     .flatMap(Collection::stream)
                     .forEach(results::add);
-        } catch (ClosingStack.ClosingException e) {
+	    }
+	    catch(Exception e){
             log.error("Error while closing progress bars", e);
         }
 
         var downloadedSuccessfully = results.stream().filter(DownloadResult::isDownloaded).toList();
-        log.info("Downloaded {}/{} elements ({}) in {} (avg: {})", downloadedSuccessfully.size(), results.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFileSize()).sum()), Duration.ofMillis(System.currentTimeMillis() - startDownload), Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L)));
+	    log.info("Downloaded {}/{} elements ({}) in {} (avg: {})",
+			    downloadedSuccessfully.size(),
+			    results.size(),
+			    org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadedSuccessfully.stream().mapToLong(r -> r.getElement().getFileSize()).sum()),
+			    Duration.ofMillis(System.currentTimeMillis() - startDownload),
+			    Duration.ofMillis((long) downloadedSuccessfully.stream().mapToLong(DownloadResult::getDownloadTime).average().orElse(0L))
+	    );
     }
 
     private static <T> List<SumSplitCollection<T>> split(Collection<T> elements, int partCount, Function<T, Long> propertyExtractor) {
