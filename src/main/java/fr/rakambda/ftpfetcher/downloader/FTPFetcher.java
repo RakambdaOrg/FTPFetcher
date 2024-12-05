@@ -60,7 +60,19 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 				var downloaded = Files.exists(fileOut);
 				log.debug("Downloading file {}", element.getRemotePath());
 				progressBar.setExtraMessage(element.getSftpFile().getName());
-				if(!downloaded){
+				if(downloaded){
+					try{
+						long fileLength = Files.size(fileOut);
+						var expectedFileLength = element.getFileSize();
+						if(expectedFileLength != fileLength){
+							downloaded = false;
+							log.warn("Sizes mismatch expected:{} actual:{} difference: {}", expectedFileLength, fileLength, fileLength - expectedFileLength);
+						}
+					}
+					catch(IOException ignored){
+					}
+				}
+				else{
 					try{
 						var dest = new CustomLocalDestFile(element.getFileOut().toFile(), 512 * 1024, bytesPerSecond);
 						connection.getSftp().get(element.getRemotePath(), dest);
