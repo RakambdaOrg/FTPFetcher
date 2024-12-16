@@ -14,6 +14,7 @@ description = "FTPFetcher"
 
 dependencies {
     implementation(platform(libs.jacksonBom))
+    implementation(platform(libs.log4j2Bom))
 
     implementation(libs.sshj)
 
