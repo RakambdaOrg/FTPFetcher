@@ -10,7 +10,7 @@ jetbrains-annotations-version = "26.0.1"
 commons-collections-version = "4.4"
 hikari-cp-version = "6.2.1"
 h2-version = "2.3.232"
-guava-version = "33.3.1-jre"
+guava-version = "33.4.0-jre"
 lombok-version = "1.18.36"
 
 shadow-version = "8.1.1"
