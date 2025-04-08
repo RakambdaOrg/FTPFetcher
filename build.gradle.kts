@@ -14,12 +14,13 @@ description = "FTPFetcher"
 
 dependencies {
     implementation(platform(libs.jacksonBom))
-    implementation(platform(libs.log4j2Bom))
+    implementation(platform(libs.log4j2Bom))  
 
     implementation(libs.sshj)
 
     implementation(libs.slf4j)
     implementation(libs.bundles.log4j2)
+    implementation(libs.log4jEcs)
 
     implementation(libs.hikaricp)
     implementation(libs.h2)
