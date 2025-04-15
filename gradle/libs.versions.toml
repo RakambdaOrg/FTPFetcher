@@ -10,7 +10,7 @@ jetbrains-annotations-version = "26.0.2"
 commons-collections-version = "4.4"
 hikari-cp-version = "6.3.0"
 h2-version = "2.3.232"
-guava-version = "33.4.7-jre"
+guava-version = "33.4.8-jre"
 lombok-version = "1.18.38"
 log4j-ecs-version = "1.7.0"
 
