@@ -12,7 +12,6 @@ hikari-cp-version = "6.3.0"
 h2-version = "2.3.232"
 guava-version = "33.4.8-jre"
 lombok-version = "1.18.38"
-log4j-ecs-version = "1.7.0"
 
 shadow-version = "8.1.1"
 names-version = "0.52.0"
@@ -23,7 +22,7 @@ slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version"
 log4j2Bom = { group = "org.apache.logging.log4j", name = "log4j-bom", version.ref = "log4j2-version" }
 log4j2-core = { group = "org.apache.logging.log4j", name = "log4j-core" }
 log4j2-slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl" }
-log4jEcs = { group = "co.elastic.logging", name = "log4j2-ecs-layout", version.ref = "log4j-ecs-version" }
+log4j2-json = { group = "org.apache.logging.log4j", name = "log4j-layout-template-json" }
 sshj = { group = "com.hierynomus", name = "sshj", version.ref = "sshj-version" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli-version" }
 jacksonBom = { group = "com.fasterxml.jackson", name = "jackson-bom", version.ref = "jackson-version" }
@@ -41,7 +40,7 @@ lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok-v
 
 [bundles]
 jackson = ["jackson-core", "jackson-annotations", "jackson-databind"]
-log4j2 = ["log4j2-core", "log4j2-slf4j"]
+log4j2 = ["log4j2-core", "log4j2-slf4j", "log4j2-json"]
 
 [plugins]
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-version" }

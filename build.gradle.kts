@@ -20,7 +20,6 @@ dependencies {
 
     implementation(libs.slf4j)
     implementation(libs.bundles.log4j2)
-    implementation(libs.log4jEcs)
 
     implementation(libs.hikaricp)
     implementation(libs.h2)
