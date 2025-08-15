@@ -5,7 +5,6 @@ plugins {
     java
     application
     alias(libs.plugins.shadow)
-    alias(libs.plugins.names)
     alias(libs.plugins.jib)
 }
 
@@ -66,7 +65,8 @@ tasks {
         archiveClassifier.set("shaded")
         archiveVersion.set("")
 
-        transform(Log4j2PluginsCacheFileTransformer::class.java)
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        transform<Log4j2PluginsCacheFileTransformer>()
     }
 
     wrapper {
