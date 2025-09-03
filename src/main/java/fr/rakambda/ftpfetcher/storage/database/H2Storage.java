@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import fr.rakambda.ftpfetcher.model.DownloadElement;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -35,8 +35,8 @@ public class H2Storage extends BaseDatabase{
 		return execute("DELETE FROM Downloaded WHERE DateDownload < DATEADD('DAY',-15,CURRENT_DATE)");
 	}
 	
-	@NotNull
-	public Collection<RemoteResourceInfo> getOnlyNotDownloaded(@NotNull String folder, @NotNull Collection<RemoteResourceInfo> entries) throws SQLException{
+	@NonNull
+	public Collection<RemoteResourceInfo> getOnlyNotDownloaded(@NonNull String folder, @NonNull Collection<RemoteResourceInfo> entries) throws SQLException{
 		var files = new HashMap<String, RemoteResourceInfo>();
 		for(var entry : entries){
 			files.put(Paths.get(folder)
@@ -67,7 +67,7 @@ public class H2Storage extends BaseDatabase{
 	}
 	
 	@Override
-	public int setDownloaded(@NotNull Collection<DownloadElement> elements){
+	public int setDownloaded(@NonNull Collection<DownloadElement> elements){
 		var downloadDate = LocalDateTime.now().toString();
 		try(var conn = getConnection();
 				var statement = conn.prepareStatement("""

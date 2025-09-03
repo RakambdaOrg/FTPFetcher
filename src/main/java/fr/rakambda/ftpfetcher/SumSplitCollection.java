@@ -2,7 +2,7 @@ package fr.rakambda.ftpfetcher;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.util.LinkedList;
 import java.util.function.Function;
 
@@ -28,7 +28,7 @@ public class SumSplitCollection<T> extends LinkedList<T> implements Comparable<S
 	}
 	
 	@Override
-	public int compareTo(@NotNull SumSplitCollection<?> o){
+	public int compareTo(@NonNull SumSplitCollection<?> o){
 		return Long.compare(getPropertySum(), o.getPropertySum());
 	}
 }

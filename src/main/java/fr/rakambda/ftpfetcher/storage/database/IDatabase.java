@@ -1,6 +1,6 @@
 package fr.rakambda.ftpfetcher.storage.database;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -10,6 +10,6 @@ public interface IDatabase extends AutoCloseable{
 	@Override
 	void close();
 	
-	@NotNull
+	@NonNull
 	Connection getConnection() throws SQLException;
 }

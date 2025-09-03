@@ -2,9 +2,8 @@ package fr.rakambda.ftpfetcher.downloader;
 
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.xfer.FileSystemFile;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +15,7 @@ public class CustomLocalDestFile extends FileSystemFile{
 	private final int bufferSize;
 	private final Double bytesPerSecond;
 	
-	public CustomLocalDestFile(@NotNull File file, int bufferSize, @Nullable Double bytesPerSecond){
+	public CustomLocalDestFile(@NonNull File file, int bufferSize, @Nullable Double bytesPerSecond){
 		super(file);
 		this.bufferSize = bufferSize;
 		this.bytesPerSecond = bytesPerSecond;

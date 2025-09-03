@@ -30,8 +30,8 @@ dependencies {
 
     implementation(libs.picocli)
     implementation(libs.bundles.jackson)
+    implementation(libs.jSpecify)
 
-    compileOnly(libs.jetbrainsAnnotations)
     compileOnly(libs.lombok)
 
     annotationProcessor(libs.lombok)

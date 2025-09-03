@@ -10,9 +10,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -28,22 +27,22 @@ public class Settings{
 	@JsonIgnore
 	private static final ObjectReader objectReader;
 	@JsonProperty("ftpHost")
-	@NotNull
+	@NonNull
 	private String ftpHost;
 	@JsonProperty("ftpUser")
-	@NotNull
+	@NonNull
 	private String ftpUser;
 	@JsonProperty("ftpPass")
-	@NotNull
+	@NonNull
 	private String ftpPass;
 	@JsonProperty("knownHosts")
 	private String knownHosts;
 	@JsonProperty("folders")
-	@NotNull
+	@NonNull
 	private List<FolderSettings> folders;
 	
 	@NonNull
-	public static Optional<Settings> loadSettings(@NotNull Path path){
+	public static Optional<Settings> loadSettings(@NonNull Path path){
 		if(path.toFile().exists()){
 			try(var fis = new FileInputStream(path.toFile())){
 				return Optional.ofNullable(objectReader.readValue(fis));

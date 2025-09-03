@@ -2,8 +2,7 @@ package fr.rakambda.ftpfetcher.downloader;
 
 import com.google.common.util.concurrent.RateLimiter;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.NotNull;
-
+import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -13,7 +12,7 @@ public final class ThrottledOutputStream extends OutputStream{
 	private final OutputStream out;
 	private final RateLimiter rateLimiter;
 	
-	public ThrottledOutputStream(@NotNull OutputStream out, double bytesPerSecond){
+	public ThrottledOutputStream(@NonNull OutputStream out, double bytesPerSecond){
 		this.out = out;
 		rateLimiter = RateLimiter.create(bytesPerSecond);
 	}
@@ -33,7 +32,7 @@ public final class ThrottledOutputStream extends OutputStream{
 	}
 	
 	@Override
-	public void write(byte @NotNull [] b, int off, int len) throws IOException{
+	public void write(byte @NonNull [] b, int off, int len) throws IOException{
 		var waited = rateLimiter.acquire(len);
 		log.debug("Waited {} seconds", waited);
 		out.write(b, off, len);

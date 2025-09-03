@@ -2,9 +2,12 @@ package fr.rakambda.ftpfetcher;
 
 import fr.rakambda.ftpfetcher.downloader.FTPFetcher;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.*;
+import org.jspecify.annotations.NonNull;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Optional;
+import java.util.Scanner;
 
 /**
  * Handles commands sent in the standard input.
@@ -79,7 +82,7 @@ class ConsoleHandler extends Thread implements AutoCloseable {
 		stop = true;
 	}
 	
-	public void addFetcher(@NotNull FTPFetcher fetcher){
+	public void addFetcher(@NonNull FTPFetcher fetcher){
 		fetchers.add(fetcher);
 	}
 }

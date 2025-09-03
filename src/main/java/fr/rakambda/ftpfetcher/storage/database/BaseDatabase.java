@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import fr.rakambda.ftpfetcher.storage.IStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -18,7 +18,7 @@ public abstract class BaseDatabase implements IStorage, IDatabase{
 		dataSource.close();
 	}
 	
-	protected int execute(@NotNull String... statements) throws SQLException{
+	protected int execute(@NonNull String... statements) throws SQLException{
 		try(var conn = getConnection()){
 			conn.setAutoCommit(false);
 			for(var sql : statements){
@@ -36,7 +36,7 @@ public abstract class BaseDatabase implements IStorage, IDatabase{
 		return -1;
 	}
 	
-	@NotNull
+	@NonNull
 	@Override
 	public Connection getConnection() throws SQLException{
 		return dataSource.getConnection();

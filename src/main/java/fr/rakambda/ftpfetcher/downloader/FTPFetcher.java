@@ -8,8 +8,8 @@ import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.xfer.LocalDestFile;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
@@ -32,7 +32,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 	private boolean stop;
 	private boolean pause;
 	
-	public FTPFetcher(@NotNull Settings settings, @NotNull IStorage storage, @NotNull Collection<DownloadElement> downloadElements, @NotNull ProgressBarHandler progressBar, @Nullable Double bytesPerSecond){
+	public FTPFetcher(@NonNull Settings settings, @NonNull IStorage storage, @NonNull Collection<DownloadElement> downloadElements, @NonNull ProgressBarHandler progressBar, @Nullable Double bytesPerSecond){
 		this.settings = settings;
 		this.storage = storage;
 		this.downloadElements = downloadElements;
@@ -42,8 +42,21 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		pause = false;
 	}
 	
+	private static void setAttributes(@NonNull DownloadElement element, @NonNull LocalDestFile dest){
+		try{
+			var attrs = element.getAttributes();
+			if(attrs.has(FileAttributes.Flag.ACMODTIME)){
+				dest.setLastAccessedTime(attrs.getAtime());
+				dest.setLastModifiedTime(attrs.getMtime());
+			}
+		}
+		catch(Exception e){
+			log.warn("Error setting file attributes for {}", element.getFileOut(), e);
+		}
+	}
+	
 	@Override
-	@NotNull
+	@NonNull
 	public Collection<DownloadResult> call() throws IOException{
 		var results = new LinkedList<DownloadResult>();
 		var toMarkDownloaded = new ArrayList<DownloadElement>(MARK_DOWNLOADED_THRESHOLD);
@@ -145,7 +158,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		return results;
 	}
 	
-	private void setFilePermissions(@NotNull DownloadElement element) throws IOException{
+	private void setFilePermissions(@NonNull DownloadElement element) throws IOException{
 		try{
 			if(Objects.nonNull(element.getPermissions())){
 				Files.setPosixFilePermissions(element.getFileOut(), element.getPermissions());
@@ -156,20 +169,7 @@ public class FTPFetcher implements Callable<Collection<DownloadResult>>{
 		}
 	}
 	
-	private static void setAttributes(@NotNull DownloadElement element, @NotNull LocalDestFile dest){
-		try{
-			var attrs = element.getAttributes();
-			if(attrs.has(FileAttributes.Flag.ACMODTIME)){
-				dest.setLastAccessedTime(attrs.getAtime());
-				dest.setLastModifiedTime(attrs.getMtime());
-			}
-		}
-		catch(Exception e){
-			log.warn("Error setting file attributes for {}", element.getFileOut(), e);
-		}
-	}
-	
-	private boolean markDownloaded(@NotNull Collection<DownloadElement> elements){
+	private boolean markDownloaded(@NonNull Collection<DownloadElement> elements){
 		if(!elements.isEmpty()){
 			var updated = storage.setDownloaded(elements);
 			if(updated == elements.size()){

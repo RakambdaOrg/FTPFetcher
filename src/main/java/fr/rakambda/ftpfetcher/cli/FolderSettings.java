@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ext.NioPathDeserializer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 
 @SuppressWarnings("FieldMayBeFinal")
@@ -20,14 +20,14 @@ public class FolderSettings{
 	@JsonProperty("recursive")
 	private boolean recursive = false;
 	@JsonProperty("fileFilter")
-	@NotNull
+	@NonNull
 	private String fileFilter = ".*";
 	@JsonProperty("localFolder")
 	@JsonDeserialize(using = NioPathDeserializer.class)
-	@NotNull
+	@NonNull
 	private Path localFolder;
 	@JsonProperty("ftpFolder")
-	@NotNull
+	@NonNull
 	private String ftpFolder;
 	@JsonProperty("deleteOnSuccess")
 	private boolean deleteOnSuccess = false;

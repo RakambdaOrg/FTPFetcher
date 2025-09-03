@@ -16,10 +16,9 @@ import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.InteractiveConsoleProgressBarConsumer;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import picocli.CommandLine;
-
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,7 +33,14 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -102,8 +108,8 @@ public class Main {
             }, () -> log.error("Failed to load settings in {}", parameters.getProperties()));
         }
     }
-
-    private static void downloadElements(@NotNull CLIParameters parameters, @NotNull Settings settings, @NotNull IStorage storage, @NotNull List<DownloadElement> downloadElements, ConsoleHandler consoleHandler) {
+	
+	private static void downloadElements(@NonNull CLIParameters parameters, @NonNull Settings settings, @NonNull IStorage storage, @NonNull List<DownloadElement> downloadElements, ConsoleHandler consoleHandler){
         log.info("Starting to download {} ({}) with {} downloaders", downloadElements.size(), org.apache.commons.io.FileUtils.byteCountToDisplaySize(downloadElements.stream().mapToLong(DownloadElement::getFileSize).sum()), parameters.getThreadCount());
         var startDownload = System.currentTimeMillis();
         var futures = new ArrayList<Future<Collection<DownloadResult>>>();
@@ -162,8 +168,8 @@ public class Main {
 
         return parts;
     }
-
-    private static int removeUselessDownloadsInDb(@NotNull IStorage storage) {
+	
+	private static int removeUselessDownloadsInDb(@NonNull IStorage storage){
         try {
             return storage.removeUseless();
         } catch (SQLException throwables) {
@@ -171,9 +177,9 @@ public class Main {
         }
         return 0;
     }
-
-    @NotNull
-    private static Collection<? extends DownloadElement> fetchFolder(@NotNull IStorage storage, @NotNull FTPConnection connection, @NotNull String folder, @NotNull Path outPath, boolean recursive, @NotNull Pattern fileFilter, boolean deleteOnSuccess, Set<PosixFilePermission> permissions) throws SQLException, IOException {
+	
+	@NonNull
+	private static Collection<? extends DownloadElement> fetchFolder(@NonNull IStorage storage, @NonNull FTPConnection connection, @NonNull String folder, @NonNull Path outPath, boolean recursive, @NonNull Pattern fileFilter, boolean deleteOnSuccess, Set<PosixFilePermission> permissions) throws SQLException, IOException{
         log.info("Fetching folder {}", folder);
         if (Objects.isNull(connection.getSftp().statExistence(folder))) {
             log.warn("Input path {} does not exists", folder);
@@ -208,7 +214,7 @@ public class Main {
     }
 
     @Nullable
-    private static DownloadElement createDownload(@NotNull String folder, @NotNull RemoteResourceInfo file, @NotNull Path folderOut, boolean deleteOnSuccess, @Nullable Set<PosixFilePermission> permissions) throws IOException {
+    private static DownloadElement createDownload(@NonNull String folder, @NonNull RemoteResourceInfo file, @NonNull Path folderOut, boolean deleteOnSuccess, @Nullable Set<PosixFilePermission> permissions) throws IOException{
         var fileOut = folderOut.resolve(file.getName());
         if (Files.exists(fileOut)) {
             return null;
@@ -229,9 +235,9 @@ public class Main {
             Files.setPosixFilePermissions(path, permissions);
         }
     }
-
-    @NotNull
-    private static IStorage getStorage(@NotNull CLIParameters parameters) throws SQLException {
+	
+	@NonNull
+	private static IStorage getStorage(@NonNull CLIParameters parameters) throws SQLException{
         if (Objects.isNull(parameters.getDatabasePath())) {
             return new NoOpStorage();
         }
@@ -240,9 +246,9 @@ public class Main {
         h2.initDatabase();
         return h2;
     }
-
-    @NotNull
-    private static HikariDataSource createH2Datasource(@NotNull Path path) {
+	
+	@NonNull
+	private static HikariDataSource createH2Datasource(@NonNull Path path){
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.h2.Driver");
         config.setJdbcUrl("jdbc:h2:" + path.toAbsolutePath());

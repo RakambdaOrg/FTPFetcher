@@ -1,13 +1,13 @@
 package fr.rakambda.ftpfetcher.downloader;
 
 import me.tongfei.progressbar.ProgressBar;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class ProgressBarHandler{
 	private final ProgressBar progressBar;
 	private final Object stepLock;
 	
-	public ProgressBarHandler(@NotNull ProgressBar progressBar){
+	public ProgressBarHandler(@NonNull ProgressBar progressBar){
 		this.progressBar = progressBar;
 		stepLock = new Object();
 	}

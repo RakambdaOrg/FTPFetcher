@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.SFTPClient;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -18,7 +18,7 @@ public class FTPConnection implements AutoCloseable{
 	@Getter
 	private SFTPClient sftp;
 	
-	public FTPConnection(@NotNull Settings settings) throws IOException{
+	public FTPConnection(@NonNull Settings settings) throws IOException{
 		this.settings = settings;
 		
 		ssh = new SSHClient();

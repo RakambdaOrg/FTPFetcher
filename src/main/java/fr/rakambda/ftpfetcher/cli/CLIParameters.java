@@ -2,8 +2,8 @@ package fr.rakambda.ftpfetcher.cli;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import picocli.CommandLine;
 import java.nio.file.Path;
 
@@ -21,7 +21,7 @@ public class CLIParameters{
 			"-p",
 			"--properties"
 	}, description = "The settings properties to use", required = true)
-	@NotNull
+	@NonNull
 	private Path properties;
 	@CommandLine.Option(names = {
 			"-db",

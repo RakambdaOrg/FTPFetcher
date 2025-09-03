@@ -2,7 +2,7 @@ package fr.rakambda.ftpfetcher.storage;
 
 import fr.rakambda.ftpfetcher.model.DownloadElement;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import java.util.Collection;
 
 public class NoOpStorage implements IStorage{
@@ -16,13 +16,13 @@ public class NoOpStorage implements IStorage{
 	}
 	
 	@Override
-	@NotNull
-	public Collection<RemoteResourceInfo> getOnlyNotDownloaded(@NotNull String folder, @NotNull Collection<RemoteResourceInfo> entries){
+	@NonNull
+	public Collection<RemoteResourceInfo> getOnlyNotDownloaded(@NonNull String folder, @NonNull Collection<RemoteResourceInfo> entries){
 		return entries;
 	}
 	
 	@Override
-	public int setDownloaded(@NotNull Collection<DownloadElement> elements){
+	public int setDownloaded(@NonNull Collection<DownloadElement> elements){
 		return elements.size();
 	}
 }
