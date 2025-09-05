@@ -11,7 +11,7 @@ commons-collections-version = "4.5.0"
 hikari-cp-version = "7.0.2"
 h2-version = "2.3.232"
 guava-version = "33.4.8-jre"
-lombok-version = "1.18.38"
+lombok-version = "1.18.40"
 
 shadow-version = "9.1.0"
 jib-version = "3.4.5"
