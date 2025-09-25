@@ -9,7 +9,7 @@ progressbar-version = "0.10.1"
 jspecify-version = "1.0.0"
 commons-collections-version = "4.5.0"
 hikari-cp-version = "7.0.2"
-h2-version = "2.3.232"
+h2-version = "2.4.240"
 guava-version = "33.5.0-jre"
 lombok-version = "1.18.42"
 
