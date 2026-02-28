@@ -13,6 +13,7 @@ jobs:
     with:
       java-version: ${{ vars.JAVA_VERSION }}
       artifact-name: Gradle-Libs
+      artifact-path: build/libs/ftpfetcher-shaded.jar
 
   dropbox:
     uses: RakambdaOrg/rakambda-github-workflows/.github/workflows/dropbox-publish-artifact.yml@main
