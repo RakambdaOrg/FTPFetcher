@@ -21,7 +21,7 @@ jobs:
     needs:
       - build
     with:
-      artifact-name: Gradle-Libs
+      artifact-name: "ftpfetcher-shaded.jar"
       source: "ftpfetcher-shaded.jar"
       target: "/Documents/JARs/FTPFetcher.jar"
       environment: DropboxPersonal
