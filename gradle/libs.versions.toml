@@ -13,7 +13,7 @@ h2-version = "2.4.240"
 guava-version = "33.5.0-jre"
 lombok-version = "1.18.44"
 
-shadow-version = "9.4.0"
+shadow-version = "9.4.1"
 jib-version = "3.5.3"
 
 [libraries]
