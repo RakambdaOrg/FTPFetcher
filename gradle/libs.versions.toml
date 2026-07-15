@@ -14,7 +14,7 @@ guava-version = "33.6.0-jre"
 lombok-version = "1.18.46"
 
 shadow-version = "9.5.1"
-jib-version = "3.5.3"
+jib-version = "3.5.4"
 
 [libraries]
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j-version" }
